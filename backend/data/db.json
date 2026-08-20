@@ -1,0 +1,275 @@
+{
+  "users": [
+    {
+      "id": "usr-1",
+      "name": "Aarav Sharma",
+      "dob": "1992-04-18",
+      "gender": "Male",
+      "bloodGroup": "O+",
+      "email": "aarav.sharma@example.com",
+      "phone": "+91 98200 41122",
+      "height": "178 cm",
+      "weight": "76 kg",
+      "allergies": [
+        "Penicillin",
+        "Dust mite"
+      ],
+      "conditions": [
+        "Pre-diabetes",
+        "Vitamin D deficiency"
+      ],
+      "emergencyContact": {
+        "name": "Meera Sharma",
+        "relation": "Spouse",
+        "phone": "+91 98111 20034"
+      },
+      "passwordHash": "$2a$10$X8p5Kz8T940/2L2p7xG9e.40j9h9K3z10sP.wQ.eX2z.G5kL"
+    },
+    {
+      "id": "usr-3a340722",
+      "name": "Sarah Jenkins",
+      "email": "sarah.jenkins@example.com",
+      "passwordHash": "$2a$10$qeHeKkaABhViPtRshuewD.mItS/PdEZXIIb1M5Sj331QBFYVsTngq",
+      "dob": "1996-05-12",
+      "gender": "Female",
+      "bloodGroup": "B+",
+      "phone": "+1 555-234-5678",
+      "height": "175 cm",
+      "weight": "70 kg",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Primary Contact",
+        "relation": "Family",
+        "phone": "+91 98000 00001"
+      }
+    },
+    {
+      "id": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "name": "VASANDHAN P.K.G 2028",
+      "email": "vasandhanpkg@gmail.com",
+      "dob": "1995-01-01",
+      "gender": "Unspecified",
+      "bloodGroup": "Not set",
+      "phone": "+91 00000 00000",
+      "height": "170 cm",
+      "weight": "65 kg",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 00000 00000"
+      },
+      "passwordHash": ""
+    },
+    {
+      "id": "usr-1dbe0699",
+      "name": "Sarah Jenkins",
+      "email": "sarah.jenkins.202608200048@example.com",
+      "passwordHash": "$2a$10$lv6k5yvF0F3W/vGfNwM/W.ZPwUd2kmh0YXNfQqA6pvUnZMcrDvzZe",
+      "dob": "1990-05-15",
+      "gender": "Female",
+      "bloodGroup": "O+",
+      "phone": "+1 (555) 019-2834",
+      "height": "175 cm",
+      "weight": "70 kg",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Primary Contact",
+        "relation": "Family",
+        "phone": "+91 98000 00001"
+      }
+    },
+    {
+      "id": "usr-4feb71cc",
+      "name": "Test User",
+      "email": "test@medvault.com",
+      "passwordHash": "$2a$10$F4G081tsxJrmXnrU.Q81QeTT.mDe2pU5bt.oBl2Cx4PKy8j3Je38C",
+      "dob": "1990-01-30",
+      "gender": "Unspecified",
+      "bloodGroup": "O+",
+      "phone": "1234567890",
+      "height": "175 cm",
+      "weight": "70 kg",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Primary Contact",
+        "relation": "Family",
+        "phone": "+91 98000 00001"
+      }
+    }
+  ],
+  "records": [
+    {
+      "id": "rec-1",
+      "userId": "usr-1",
+      "name": "Complete Blood Count (CBC)",
+      "date": "2026-07-28",
+      "type": "PDF",
+      "category": "Lab Report",
+      "status": "processed",
+      "size": "412 KB",
+      "summary": "Hemoglobin 14.2 g/dL, WBC 7.1 K/µL — all values within normal reference range.",
+      "createdAt": "2026-08-19T08:51:53.745Z"
+    },
+    {
+      "id": "rec-2",
+      "userId": "usr-1",
+      "name": "HbA1c & Fasting Glucose Panel",
+      "date": "2026-07-12",
+      "type": "PDF",
+      "category": "Lab Report",
+      "status": "processed",
+      "size": "298 KB",
+      "summary": "HbA1c 5.9% — borderline. Fasting glucose 104 mg/dL, trending down from last quarter.",
+      "createdAt": "2026-08-19T08:51:53.747Z"
+    },
+    {
+      "id": "rec-3",
+      "userId": "usr-1",
+      "name": "Lipid Profile",
+      "date": "2026-06-30",
+      "type": "PDF",
+      "category": "Lab Report",
+      "status": "processed",
+      "size": "355 KB",
+      "summary": "Total Cholesterol 192 mg/dL, HDL 48 mg/dL, LDL 118 mg/dL, Triglycerides 130 mg/dL.",
+      "createdAt": "2026-08-19T08:51:53.747Z"
+    },
+    {
+      "id": "rec-4",
+      "userId": "usr-1",
+      "name": "Chest X-Ray PA View",
+      "date": "2026-05-15",
+      "type": "DICOM/Image",
+      "category": "Imaging",
+      "status": "processed",
+      "size": "4.2 MB",
+      "summary": "Clear lung fields bilaterally. Normal cardiothoracic ratio. No acute cardiopulmonary disease.",
+      "createdAt": "2026-08-19T08:51:53.747Z"
+    },
+    {
+      "id": "rec-5",
+      "userId": "usr-1",
+      "name": "Tetanus Booster Prescription",
+      "date": "2026-04-10",
+      "type": "PDF",
+      "category": "Prescription",
+      "status": "processed",
+      "size": "180 KB",
+      "summary": "Tdap vaccine administered post minor abrasion. Valid for 10 years.",
+      "createdAt": "2026-08-19T08:51:53.747Z"
+    }
+  ],
+  "vitals": [
+    {
+      "id": "v-1",
+      "userId": "usr-1",
+      "date": "2026-08-01",
+      "systolic": 122,
+      "diastolic": 80,
+      "heartRate": 72,
+      "bloodGlucose": 102,
+      "weightKg": 76
+    },
+    {
+      "id": "v-2",
+      "userId": "usr-1",
+      "date": "2026-08-05",
+      "systolic": 120,
+      "diastolic": 78,
+      "heartRate": 70,
+      "bloodGlucose": 99,
+      "weightKg": 75.8
+    },
+    {
+      "id": "v-3",
+      "userId": "usr-1",
+      "date": "2026-08-10",
+      "systolic": 118,
+      "diastolic": 79,
+      "heartRate": 68,
+      "bloodGlucose": 96,
+      "weightKg": 75.5
+    },
+    {
+      "id": "v-4",
+      "userId": "usr-1",
+      "date": "2026-08-15",
+      "systolic": 121,
+      "diastolic": 81,
+      "heartRate": 74,
+      "bloodGlucose": 101,
+      "weightKg": 76
+    },
+    {
+      "id": "v-88f65bea",
+      "userId": "usr-1dbe0699",
+      "date": "2026-08-19",
+      "systolic": 125,
+      "diastolic": 82,
+      "heartRate": 72,
+      "bloodGlucose": 98,
+      "weightKg": 70
+    }
+  ],
+  "emergencyTokens": [
+    {
+      "token": "EMG-FCCBA65D",
+      "patientId": "usr-1",
+      "patientName": "Aarav Sharma",
+      "bloodGroup": "O+",
+      "allergies": [
+        "Penicillin",
+        "Dust mite"
+      ],
+      "conditions": [
+        "Pre-diabetes",
+        "Vitamin D deficiency"
+      ],
+      "emergencyContact": {
+        "name": "Meera Sharma",
+        "relation": "Spouse",
+        "phone": "+91 98111 20034"
+      },
+      "expiresAt": "2026-08-20T16:53:30.899Z"
+    },
+    {
+      "token": "EMG-8692055D",
+      "patientId": "usr-1",
+      "patientName": "Aarav Sharma",
+      "bloodGroup": "O+",
+      "allergies": [
+        "Penicillin",
+        "Dust mite"
+      ],
+      "conditions": [
+        "Pre-diabetes",
+        "Vitamin D deficiency"
+      ],
+      "emergencyContact": {
+        "name": "Meera Sharma",
+        "relation": "Spouse",
+        "phone": "+91 98111 20034"
+      },
+      "expiresAt": "2026-08-20T17:58:23.106Z"
+    },
+    {
+      "token": "EMG-2CD0F824",
+      "patientId": "usr-4feb71cc",
+      "patientName": "Test User",
+      "bloodGroup": "O+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Primary Contact",
+        "relation": "Family",
+        "phone": "+91 98000 00001"
+      },
+      "expiresAt": "2026-08-20T20:30:16.697Z"
+    }
+  ]
+}
