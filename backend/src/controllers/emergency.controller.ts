@@ -3,9 +3,9 @@ import { db, EmergencyAccess } from '../services/database';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { v4 as uuidv4 } from 'uuid';
 
-export const generateEmergencyQR = (req: AuthenticatedRequest, res: Response) => {
+export const generateEmergencyQR = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.id || 'usr-1';
-  const user = db.findUserById(userId);
+  const user = await db.findUserById(userId);
 
   if (!user) {
     return res.status(404).json({ error: 'Patient profile not found' });
@@ -25,7 +25,7 @@ export const generateEmergencyQR = (req: AuthenticatedRequest, res: Response) =>
     expiresAt
   };
 
-  db.saveEmergencyToken(access);
+  await db.createEmergencyToken(access);
 
   const qrDataUrl = `https://medvault.health/emergency/verify?token=${token}`;
 
@@ -38,9 +38,9 @@ export const generateEmergencyQR = (req: AuthenticatedRequest, res: Response) =>
   });
 };
 
-export const verifyEmergencyToken = (req: AuthenticatedRequest, res: Response) => {
+export const verifyEmergencyToken = async (req: AuthenticatedRequest, res: Response) => {
   const { token } = req.params;
-  const access = db.getEmergencyToken(token as string);
+  const access = await db.getEmergencyToken(token as string);
 
   if (!access) {
     return res.status(404).json({ error: 'Invalid or expired emergency token' });

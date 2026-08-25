@@ -12,7 +12,7 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
 
-    const existingUser = db.findUserByEmail(email);
+    const existingUser = await db.findUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
@@ -40,7 +40,7 @@ export const register = async (req: Request, res: Response) => {
       }
     };
 
-    db.createUser(newUser);
+    await db.createUser(newUser);
 
     const secret = process.env.JWT_SECRET || 'medvault_super_secret_jwt_key_2026';
     const token = jwt.sign(
@@ -69,7 +69,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const user = db.findUserByEmail(email);
+    const user = await db.findUserByEmail(email);
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -103,12 +103,12 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const getMe = (req: any, res: Response) => {
+export const getMe = async (req: any, res: Response) => {
   try {
     const userId = req.user?.id || 'usr-1';
-    const user = db.findUserById(userId);
+    const user = await db.findUserById(userId);
     if (!user) {
-      return res.status(444).json({ error: 'User profile not found' });
+      return res.status(404).json({ error: 'User profile not found' });
     }
     const { passwordHash: _, ...userWithoutPassword } = user;
     return res.json(userWithoutPassword);

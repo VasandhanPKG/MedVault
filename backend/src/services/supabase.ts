@@ -1,7 +1,13 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import ws from 'ws';
 
 dotenv.config();
+
+// Ensure WebSocket polyfill exists for Node environments < 22
+if (typeof (globalThis as any).WebSocket === 'undefined') {
+  (globalThis as any).WebSocket = ws;
+}
 
 const supabaseUrl = process.env.SUPABASE_URL || 'https://otuxyxbxhusmxvbzcpzb.supabase.co';
 const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || '';
@@ -16,7 +22,7 @@ if (supabaseUrl && supabaseKey) {
         autoRefreshToken: false,
       }
     });
-    console.log('⚡ Supabase Client initialized for MedVault database');
+    console.log('⚡ Supabase Client initialized successfully for MedVault database');
   } catch (error) {
     console.error('Failed to initialize Supabase client:', error);
   }
@@ -25,3 +31,4 @@ if (supabaseUrl && supabaseKey) {
 }
 
 export const supabase = supabaseInstance;
+export const isSupabaseConfigured = (): boolean => supabaseInstance !== null;

@@ -3,13 +3,13 @@ import { db, VitalRecord } from '../services/database';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { v4 as uuidv4 } from 'uuid';
 
-export const getVitals = (req: AuthenticatedRequest, res: Response) => {
+export const getVitals = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.id || 'usr-1';
-  const vitals = db.getVitals(userId);
+  const vitals = await db.getVitals(userId);
   return res.json(vitals);
 };
 
-export const addVital = (req: AuthenticatedRequest, res: Response) => {
+export const addVital = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.id || 'usr-1';
   const { systolic, diastolic, heartRate, bloodGlucose, weightKg, date } = req.body;
 
@@ -24,6 +24,6 @@ export const addVital = (req: AuthenticatedRequest, res: Response) => {
     weightKg: Number(weightKg) || 75
   };
 
-  db.addVital(newVital);
+  await db.addVital(newVital);
   return res.status(201).json({ message: 'Vitals logged successfully', vital: newVital });
 };
