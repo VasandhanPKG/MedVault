@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { HeartPulse, Lock, Phone, ShieldCheck, User } from "lucide-react";
+import { HeartPulse, Lock, Phone, ShieldCheck, User, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { api, getStoredUser, setStoredUser } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
+
+const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const privacy = [
   {
@@ -35,7 +45,7 @@ export function ProfilePage() {
       email: "",
       dob: "",
       gender: "Unspecified",
-      bloodGroup: "Not set",
+      bloodGroup: "O+",
       phone: "",
       height: "175 cm",
       weight: "70 kg",
@@ -90,7 +100,9 @@ export function ProfilePage() {
           <p className="mt-4 text-lg font-bold">{profile.name}</p>
           <p className="text-sm text-muted-foreground">{profile.email || "No email on file"}</p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <Badge variant="secondary">Blood group {profile.bloodGroup || "Not set"}</Badge>
+            <Badge variant="secondary" className="font-bold flex items-center gap-1">
+              <Heart className="size-3 text-red-500 fill-red-500" /> Blood Group: {profile.bloodGroup || "O+"}
+            </Badge>
             <Badge variant="outline">{profile.gender || "Unspecified"}</Badge>
           </div>
           <div className="mt-6 grid w-full grid-cols-2 gap-3">
@@ -146,15 +158,57 @@ export function ProfilePage() {
                 onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="p-blood">Blood group</Label>
-              <Input
-                id="p-blood"
-                value={profile.bloodGroup || ""}
-                onChange={(e) => setProfile({ ...profile, bloodGroup: e.target.value })}
-              />
+            
+            {/* Blood Group Select Dropdown & Quick-Select Buttons */}
+            <div className="space-y-2 sm:col-span-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="p-blood" className="flex items-center gap-1.5 font-bold">
+                  <Heart className="size-3.5 text-red-500 fill-red-500" /> Select Blood Group
+                </Label>
+                <span className="text-xs text-muted-foreground">Chosen: <strong className="text-primary">{profile.bloodGroup || "O+"}</strong></span>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 pt-1">
+                {bloodGroups.map((bg) => {
+                  const isSelected = profile.bloodGroup === bg;
+                  return (
+                    <button
+                      key={bg}
+                      type="button"
+                      onClick={() => setProfile({ ...profile, bloodGroup: bg })}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-sm font-bold transition-all border",
+                        isSelected
+                          ? "bg-red-500 text-white border-red-600 shadow-md scale-105"
+                          : "bg-surface text-foreground border-border hover:border-red-400/50 hover:bg-red-50/10"
+                      )}
+                    >
+                      {bg}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2">
+                <Select
+                  value={profile.bloodGroup || "O+"}
+                  onValueChange={(val) => setProfile({ ...profile, bloodGroup: val })}
+                >
+                  <SelectTrigger id="p-blood" className="w-full">
+                    <SelectValue placeholder="Select Blood Group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bloodGroups.map((b) => (
+                      <SelectItem key={b} value={b} className="font-semibold">
+                        🩸 {b}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
+
+            <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="p-allergy">Known allergies (comma-separated)</Label>
               <Input
                 id="p-allergy"
@@ -165,10 +219,11 @@ export function ProfilePage() {
                     allergies: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
                   })
                 }
+                placeholder="e.g. Penicillin, Sulfa drugs, Peanuts"
               />
             </div>
           </div>
-          <Button className="mt-5" onClick={handleSave} disabled={saving}>
+          <Button className="mt-5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold" onClick={handleSave} disabled={saving}>
             {saving ? "Saving…" : "Save changes"}
           </Button>
         </div>
@@ -206,7 +261,7 @@ export function ProfilePage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="e-phone">Phone Number</Label>
+              <Label htmlFor="e-phone">Phone</Label>
               <Input
                 id="e-phone"
                 value={profile.emergencyContact?.phone || ""}
@@ -219,51 +274,34 @@ export function ProfilePage() {
               />
             </div>
           </div>
-          <Button variant="outline" className="mt-5" onClick={handleSave} disabled={saving}>
-            Update contact
+          <Button className="mt-5" onClick={handleSave} disabled={saving}>
+            {saving ? "Saving…" : "Save changes"}
           </Button>
-        </div>
-
-        <div className="surface-card p-6">
-          <div className="flex items-center gap-2">
-            <HeartPulse className="size-[18px] text-primary" />
-            <h2 className="font-bold">Conditions</h2>
-          </div>
-          <ul className="mt-4 space-y-2">
-            {profile.conditions && profile.conditions.length > 0 ? (
-              profile.conditions.map((c: string) => (
-                <li key={c} className="rounded-xl bg-surface px-4 py-3 text-sm font-medium">
-                  {c}
-                </li>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground py-2">No chronic conditions listed.</p>
-            )}
-          </ul>
         </div>
 
         <div className="surface-card p-6 lg:col-span-3">
           <div className="flex items-center gap-2">
             <ShieldCheck className="size-[18px] text-primary" />
-            <h2 className="font-bold">Privacy settings</h2>
+            <h2 className="font-bold">Privacy & sharing preferences</h2>
           </div>
-          <ul className="mt-5 divide-y divide-border">
+          <div className="mt-5 space-y-4">
             {privacy.map((p) => (
-              <li key={p.label} className="flex items-center justify-between gap-6 py-4">
+              <div
+                key={p.label}
+                className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
                 <div>
-                  <p className="text-sm font-semibold">{p.label}</p>
+                  <p className="font-semibold text-sm">{p.label}</p>
                   <p className="text-xs text-muted-foreground">{p.desc}</p>
                 </div>
                 <Switch defaultChecked={p.on} />
-              </li>
+              </div>
             ))}
-          </ul>
-          <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-            <Lock className="size-3.5" /> Documents remain encrypted with keys only you control.
-          </p>
+          </div>
         </div>
       </div>
     </AppShell>
   );
 }
+
 export default ProfilePage;

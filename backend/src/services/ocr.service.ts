@@ -17,9 +17,10 @@ export interface ExtractedMarker {
 
 export interface OcrProcessingResult {
   rawText: string;
+  isMedical: boolean;
   extractedMarkers: ExtractedMarker[];
   summary: string;
-  detectedCategory: "Lab Report" | "Imaging" | "Prescription" | "Vaccination" | "Discharge Summary";
+  detectedCategory: "Lab Report" | "Imaging" | "Prescription" | "Vaccination" | "Discharge Summary" | "Other";
 }
 
 export class OcrService {
@@ -38,18 +39,20 @@ export class OcrService {
   }
 
   /**
-   * Main OCR extraction method for images and PDFs
+   * Main OCR extraction method for images and PDFs (supports both Buffer and file path)
    */
-  public async processDocument(filePath: string, mimeType: string): Promise<OcrProcessingResult> {
+  public async processDocument(input: string | Buffer, mimeType: string, filename = 'document'): Promise<OcrProcessingResult> {
     let rawText = '';
+    const isBuffer = Buffer.isBuffer(input);
 
     try {
-      if (mimeType === 'application/pdf' || filePath.toLowerCase().endsWith('.pdf')) {
-        rawText = await this.extractFromPdf(filePath);
-      } else if (mimeType.startsWith('image/') || /\.(png|jpe?g|webp|bmp|tiff)$/i.test(filePath)) {
-        rawText = await this.extractFromImage(filePath);
+      if (mimeType === 'application/pdf' || filename.toLowerCase().endsWith('.pdf')) {
+        const buffer = isBuffer ? input : fs.readFileSync(input);
+        rawText = await this.extractFromPdfBuffer(buffer, filename);
+      } else if (mimeType.startsWith('image/') || /\.(png|jpe?g|webp|bmp|tiff)$/i.test(filename)) {
+        rawText = await this.extractFromImageInput(input, filename);
       } else {
-        const buffer = fs.readFileSync(filePath);
+        const buffer = isBuffer ? input : fs.readFileSync(input);
         rawText = buffer.toString('utf-8').replace(/[^\x20-\x7E\n]/g, '');
       }
     } catch (err) {
@@ -59,36 +62,60 @@ export class OcrService {
     // Try Gemini Vision multimodal extraction if API key is provided and available
     if (this.genAI) {
       try {
-        const geminiResult = await this.extractWithGemini(filePath, mimeType, rawText);
-        if (geminiResult && geminiResult.extractedMarkers.length > 0) {
+        const geminiResult = await this.extractWithGemini(input, mimeType, rawText, filename);
+        if (geminiResult) {
           return geminiResult;
         }
       } catch (geminiErr) {
-        console.warn('Gemini document extraction fallback to rule engine:', geminiErr);
+        console.warn('Gemini document extraction fallback to local clinical engine:', geminiErr);
       }
     }
 
-    if (!rawText || rawText.trim().length === 0) {
-      rawText = 'Medical document received and verified. Standard clinical imaging or report format.';
+    // Local Clinical Validation & Engine
+    return this.processLocally(rawText, filename);
+  }
+
+  /**
+   * Local deterministic clinical engine
+   */
+  public processLocally(rawText: string, filename = ''): OcrProcessingResult {
+    const isMedical = this.isMedicalDocument(rawText, filename);
+
+    if (!isMedical) {
+      return {
+        rawText: rawText.trim(),
+        isMedical: false,
+        extractedMarkers: [],
+        summary: 'This document does not appear to be a recognized medical record, laboratory test report, or radiology imaging scan. No clinical metrics were extracted.',
+        detectedCategory: 'Other'
+      };
     }
 
-    const extractedMarkers = this.extractBiomarkers(rawText);
-    const detectedCategory = this.detectCategory(rawText);
-    const summary = this.generateClinicalSummary(rawText, extractedMarkers, detectedCategory);
+    const detectedCategory = this.detectCategory(rawText, filename);
+    let extractedMarkers: ExtractedMarker[] = [];
+
+    if (detectedCategory === 'Imaging') {
+      extractedMarkers = this.extractImagingMarkers(rawText, filename);
+    } else {
+      extractedMarkers = this.extractBiomarkers(rawText);
+    }
+
+    const summary = this.generateClinicalSummary(rawText, extractedMarkers, detectedCategory, filename);
 
     return {
       rawText: rawText.trim(),
+      isMedical: true,
       extractedMarkers,
       summary,
       detectedCategory,
     };
   }
 
-  private async extractFromImage(filePath: string): Promise<string> {
-    console.log(`🔍 [OCR] Processing image file with Tesseract: ${path.basename(filePath)}`);
+  private async extractFromImageInput(input: string | Buffer, filename: string): Promise<string> {
+    console.log(`🔍 [OCR] Processing image with Tesseract: ${path.basename(filename)}`);
     try {
       const { data: { text } } = await Tesseract.recognize(
-        filePath,
+        input,
         'eng',
         {
           logger: (m) => {
@@ -106,11 +133,10 @@ export class OcrService {
     }
   }
 
-  private async extractFromPdf(filePath: string): Promise<string> {
-    console.log(`📄 [OCR] Parsing PDF document text: ${path.basename(filePath)}`);
+  private async extractFromPdfBuffer(buffer: Buffer, filename: string): Promise<string> {
+    console.log(`📄 [OCR] Parsing PDF document text: ${path.basename(filename)}`);
     try {
-      const dataBuffer = fs.readFileSync(filePath);
-      const data = await pdfParser(dataBuffer);
+      const data = await pdfParser(buffer);
       return data.text || '';
     } catch (e) {
       console.error('PDF text extraction error:', e);
@@ -119,26 +145,246 @@ export class OcrService {
   }
 
   /**
+   * Validate whether document text contains genuine healthcare/clinical content
+   */
+  public isMedicalDocument(text: string, filename = ''): boolean {
+    const lower = `${text} ${filename}`.toLowerCase();
+
+    // Specific non-medical disqualifiers (invoices, receipts, software code, tax documents, utility bills)
+    if (
+      (lower.includes('invoice #') || lower.includes('bill to:') || lower.includes('tax invoice') || lower.includes('payment receipt')) &&
+      !lower.includes('hospital') && !lower.includes('patient') && !lower.includes('clinical') && !lower.includes('doctor')
+    ) {
+      return false;
+    }
+
+    if (
+      lower.includes('curriculum vitae') || lower.includes('resume') || lower.includes('experience summary') ||
+      lower.includes('education background') || lower.includes('skills & proficiencies')
+    ) {
+      return false;
+    }
+
+    // Medical keywords registry
+    const medicalKeywords = [
+      'patient', 'hospital', 'clinic', 'dr.', 'doctor', 'physician', 'specimen', 'laboratory', 'diagnostic',
+      'reference interval', 'reference range', 'biochemistry', 'hematology', 'pathology', 'radiology',
+      'mri', 'ct scan', 'x-ray', 'xray', 'ultrasound', 'sonography', 'ecg', 'ekg', 'echo', 'mammogram',
+      'prescription', 'rx', 'tablet', 'capsule', 'dosage', 'diagnosis', 'impression', 'findings',
+      'glucose', 'hba1c', 'cholesterol', 'triglycerides', 'hemoglobin', 'creatinine', 'platelet', 'wbc', 'rbc',
+      'blood pressure', 'discharge summary', 'vital', 'vaccine', 'vaccination', 'immunization', 'serology',
+      'biopsy', 'histopathology', 'urine analysis', 'lipid profile', 'renal function', 'liver function'
+    ];
+
+    let matchCount = 0;
+    for (const kw of medicalKeywords) {
+      if (lower.includes(kw)) {
+        matchCount++;
+      }
+    }
+
+    // At least 2 medical terms or 1 strong diagnostic term
+    const strongTerms = ['mri', 'x-ray', 'ct scan', 'ultrasound', 'hba1c', 'lipid profile', 'discharge summary', 'prescription', 'biochemistry'];
+    const hasStrongTerm = strongTerms.some(term => lower.includes(term));
+
+    return matchCount >= 2 || hasStrongTerm;
+  }
+
+  /**
+   * Accurate classification for Imaging, Lab Reports, Prescriptions, Vaccines, etc.
+   */
+  public detectCategory(text: string, filename = ''): "Lab Report" | "Imaging" | "Prescription" | "Vaccination" | "Discharge Summary" | "Other" {
+    const lower = `${text} ${filename}`.toLowerCase();
+
+    // 1. Radiology / Imaging (MRI, CT, X-Ray, Ultrasound, Mammography, PET, ECG)
+    if (
+      lower.includes('mri') || lower.includes('magnetic resonance') ||
+      lower.includes('x-ray') || lower.includes('xray') || lower.includes('radiograph') || lower.includes('radiology') ||
+      lower.includes('ct scan') || lower.includes('computed tomography') || lower.includes('hrct') || lower.includes('ncct') || lower.includes('cect') ||
+      lower.includes('ultrasound') || lower.includes('usg') || lower.includes('sonography') || lower.includes('echocardiogram') ||
+      lower.includes('mammography') || lower.includes('mammogram') || lower.includes('pet-ct') || lower.includes('pet scan') ||
+      lower.includes('ecg') || lower.includes('electrocardiogram')
+    ) {
+      return 'Imaging';
+    }
+
+    // 2. Prescription
+    if (
+      lower.includes('rx') || lower.includes('prescription') || lower.includes('medication order') ||
+      lower.includes('tablet') || lower.includes('capsule') || lower.includes('sig:') || lower.includes('dosage:')
+    ) {
+      return 'Prescription';
+    }
+
+    // 3. Vaccination
+    if (
+      lower.includes('vaccine') || lower.includes('vaccination') || lower.includes('immunization') ||
+      lower.includes('booster dose') || lower.includes('covishield') || lower.includes('covaxin') || lower.includes('hepatitis b vaccine')
+    ) {
+      return 'Vaccination';
+    }
+
+    // 4. Discharge Summary
+    if (
+      lower.includes('discharge summary') || lower.includes('date of admission') || lower.includes('date of discharge') ||
+      lower.includes('hospital course') || lower.includes('inpatient record')
+    ) {
+      return 'Discharge Summary';
+    }
+
+    // 5. Lab Report
+    if (
+      lower.includes('lab') || lower.includes('laboratory') || lower.includes('blood test') || lower.includes('serum') ||
+      lower.includes('specimen') || lower.includes('hematology') || lower.includes('biochemistry') || lower.includes('urine') ||
+      lower.includes('lipid') || lower.includes('glucose') || lower.includes('hba1c') || lower.includes('hemoglobin')
+    ) {
+      return 'Lab Report';
+    }
+
+    return 'Other';
+  }
+
+  /**
+   * Extract Structured Radiology / Imaging Details (MRI, X-Ray, CT Scan, Ultrasound, ECG)
+   */
+  public extractImagingMarkers(text: string, filename = ''): ExtractedMarker[] {
+    const markers: ExtractedMarker[] = [];
+    const lower = `${text} ${filename}`.toLowerCase();
+
+    // 1. Detect Modality
+    let modality = 'Diagnostic Imaging';
+    if (lower.includes('mri') || lower.includes('magnetic resonance')) modality = 'Magnetic Resonance Imaging (MRI)';
+    else if (lower.includes('ct scan') || lower.includes('computed tomography') || lower.includes('hrct')) modality = 'Computed Tomography (CT Scan)';
+    else if (lower.includes('x-ray') || lower.includes('xray') || lower.includes('radiograph')) modality = 'Digital Radiography (X-Ray)';
+    else if (lower.includes('ultrasound') || lower.includes('usg') || lower.includes('sonography')) modality = 'Ultrasonography (USG)';
+    else if (lower.includes('ecg') || lower.includes('electrocardiogram')) modality = '12-Lead Electrocardiogram (ECG)';
+    else if (lower.includes('echo') || lower.includes('echocardiogram')) modality = '2D Echocardiogram (ECHO)';
+    else if (lower.includes('mammogram') || lower.includes('mammography')) modality = 'Digital Mammography';
+
+    markers.push({
+      name: 'Imaging Modality',
+      value: modality,
+      unit: 'Radiology',
+      status: 'normal',
+      referenceRange: 'Standard Imaging Protocol'
+    });
+
+    // 2. Detect Anatomical Region
+    let region = 'General Scan';
+    if (lower.includes('brain') || lower.includes('head') || lower.includes('cranial') || lower.includes('skull')) region = 'Brain & Cranial Cavity';
+    else if (lower.includes('chest') || lower.includes('lung') || lower.includes('thorax') || lower.includes('pulmonary')) region = 'Chest & Thoracic Cavity';
+    else if (lower.includes('lumbar') || lower.includes('l-spine') || lower.includes('l1-l5') || lower.includes('l4-l5') || lower.includes('l5-s1')) region = 'Lumbar Spine (L-Spine)';
+    else if (lower.includes('cervical') || lower.includes('c-spine') || lower.includes('c1-c7')) region = 'Cervical Spine (C-Spine)';
+    else if (lower.includes('abdomen') || lower.includes('pelvis') || lower.includes('liver') || lower.includes('gallbladder') || lower.includes('kidney')) region = 'Abdomen & Pelvis';
+    else if (lower.includes('knee') || lower.includes('joint') || lower.includes('meniscus') || lower.includes('acl')) region = 'Knee Joint (Musculoskeletal)';
+    else if (lower.includes('heart') || lower.includes('cardiac') || lower.includes('myocardium')) region = 'Cardiovascular / Heart';
+    else if (lower.includes('thyroid') || lower.includes('neck')) region = 'Thyroid & Neck';
+
+    markers.push({
+      name: 'Anatomical Region',
+      value: region,
+      unit: 'Target Organ',
+      status: 'normal',
+      referenceRange: 'Clinical Target'
+    });
+
+    // 3. Extract Radiological Impression / Finding
+    let impression = '';
+    const impMatch = text.match(/(?:IMPRESSION|CONCLUSION|OPINION|SUMMARY|FINDINGS):\s*([^\n\r]+(?:\n[^\n\r]+){0,3})/i);
+    if (impMatch && impMatch[1]) {
+      impression = impMatch[1].replace(/\s+/g, ' ').trim();
+    }
+
+    // Assess Clinical Status (negation-aware check)
+    const lowerImp = (impression || text).toLowerCase();
+    const normalKeywords = [
+      'normal study', 'clear lung fields', 'no acute', 'unremarkable', 'within normal limits',
+      'no focal abnormality', 'normal cardiac silhouette', 'intact', 'normal alignment',
+      'no evidence of acute', 'without acute'
+    ];
+
+    const isExplicitlyNormal = normalKeywords.some(kw => lowerImp.includes(kw));
+
+    let hasTrueAbnormality = false;
+    for (const kw of ['bulge', 'herniation', 'protrusion', 'fracture', 'stenosis', 'fatty liver', 'calculus', 'lesion', 'mass', 'effusion', 'consolidation', 'edema', 'infarct', 'hemorrhage']) {
+      const idx = lowerImp.indexOf(kw);
+      if (idx !== -1) {
+        const preceding = lowerImp.substring(Math.max(0, idx - 30), idx);
+        if (!preceding.includes('no ') && !preceding.includes('without ') && !preceding.includes('free of ') && !preceding.includes('negative for ') && !preceding.includes('no focal ')) {
+          hasTrueAbnormality = true;
+          break;
+        }
+      }
+    }
+
+    let status: ExtractedMarker['status'] = 'normal';
+    if (hasTrueAbnormality) {
+      status = 'attention';
+    } else if (!isExplicitlyNormal && lowerImp.includes('mild')) {
+      status = 'borderline';
+    } else {
+      status = 'normal';
+    }
+
+    if (impression) {
+      markers.push({
+        name: 'Radiological Impression',
+        value: impression.length > 90 ? impression.substring(0, 87) + '...' : impression,
+        unit: 'Impression',
+        status,
+        referenceRange: 'Unremarkable / Normal Anatomical Study'
+      });
+    } else {
+      markers.push({
+        name: 'Study Status',
+        value: status === 'normal' ? 'Unremarkable / Within Normal Limits' : 'Observation / Clinical Follow-up Needed',
+        unit: 'Evaluation',
+        status,
+        referenceRange: 'Unremarkable Anatomical Study'
+      });
+    }
+
+    return markers;
+  }
+
+  /**
    * Multimodal AI extraction using Gemini
    */
-  private async extractWithGemini(filePath: string, mimeType: string, preExtractedText: string): Promise<OcrProcessingResult | null> {
+  private async extractWithGemini(input: string | Buffer, mimeType: string, preExtractedText: string, filename: string): Promise<OcrProcessingResult | null> {
     if (!this.genAI) return null;
 
     try {
       const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const prompt = `You are a clinical OCR & Medical Document Analysis Assistant.
-Analyze this medical report / lab scan.
-Extract all key laboratory biomarkers, patient vitals, diagnostic summaries, and category.
+      const prompt = `You are a strict, expert Clinical OCR and Healthcare Document Analysis Assistant.
+Analyze this uploaded file carefully.
+
+Rules:
+1. FIRST check if this is an actual medical/healthcare document (e.g. lab report, blood test, radiology MRI/CT/X-ray scan, prescription, discharge summary).
+   - If it is NOT a medical document (e.g. an electricity bill, resume, receipt, invoice, code, general document), return "isMedical": false, "detectedCategory": "Other", "summary": "This document does not contain medical test results, clinical records, or radiology findings.", "extractedMarkers": [].
+   - DO NOT hallucinate or make up fake medical markers for non-medical files!
+
+2. If it IS an IMAGING / RADIOLOGY report (MRI, X-Ray, CT, Ultrasound, ECG, ECHO):
+   - Set "detectedCategory": "Imaging"
+   - Extract structured radiology parameters:
+     - Name: "Imaging Modality" (e.g. MRI Lumbar Spine, Chest X-Ray PA View, USG Whole Abdomen)
+     - Name: "Anatomical Target" (e.g. Lumbar Spine, Lungs & Thorax, Brain)
+     - Name: "Radiological Impression" (the radiologist's conclusion, status: normal, borderline, or attention)
+     - Name: Any specific clinical findings (e.g. "L4-L5 disc protrusion", "Clear lung fields")
+
+3. If it IS a LAB REPORT / BLOOD TEST:
+   - Extract ONLY biomarkers that actually appear in the text with genuine numbers and units.
+   - Do NOT assume or invent values!
 
 Return ONLY a valid JSON object in this exact schema (no markdown fences, no code blocks):
 {
-  "detectedCategory": "Lab Report" | "Imaging" | "Prescription" | "Vaccination" | "Discharge Summary",
-  "summary": "Concise 1-3 sentence clinical summary with key findings or abnormal flags.",
+  "isMedical": true | false,
+  "detectedCategory": "Lab Report" | "Imaging" | "Prescription" | "Vaccination" | "Discharge Summary" | "Other",
+  "summary": "Accurate 1-3 sentence clinical summary with findings.",
   "extractedMarkers": [
     {
-      "name": "Biomarker / Test Name (e.g. HbA1c, Fasting Blood Glucose, LDL)",
-      "value": "Measured numeric value or result",
-      "unit": "Unit of measurement (e.g. %, mg/dL, g/dL, U/L)",
+      "name": "Parameter Name",
+      "value": "Measured numeric or clinical observation value",
+      "unit": "Unit or category",
       "status": "normal" | "borderline" | "high" | "low" | "attention",
       "referenceRange": "Normal reference interval"
     }
@@ -146,12 +392,12 @@ Return ONLY a valid JSON object in this exact schema (no markdown fences, no cod
 }
 
 Document Text (if extracted):
-${preExtractedText.substring(0, 3000)}`;
+${preExtractedText.substring(0, 3500)}`;
 
       let responseText = '';
 
       if (mimeType.startsWith('image/')) {
-        const imageBuffer = fs.readFileSync(filePath);
+        const imageBuffer = Buffer.isBuffer(input) ? input : fs.readFileSync(input);
         const imagePart = {
           inlineData: {
             data: imageBuffer.toString('base64'),
@@ -165,14 +411,14 @@ ${preExtractedText.substring(0, 3000)}`;
         responseText = result.response.text();
       }
 
-      // Clean response JSON
       const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(cleanJson);
 
       return {
-        rawText: preExtractedText || 'Extracted via Gemini Vision OCR',
+        rawText: preExtractedText || 'Extracted via Gemini Multimodal OCR',
+        isMedical: parsed.isMedical !== false,
         extractedMarkers: Array.isArray(parsed.extractedMarkers) ? parsed.extractedMarkers : [],
-        summary: parsed.summary || 'Document successfully analyzed.',
+        summary: parsed.summary || 'Medical document analyzed.',
         detectedCategory: parsed.detectedCategory || 'Lab Report'
       };
     } catch (err) {
@@ -182,11 +428,10 @@ ${preExtractedText.substring(0, 3000)}`;
   }
 
   /**
-   * Comprehensive regex & NER biomarker parser
+   * Comprehensive regex & NER biomarker parser (STRICT: extracts ONLY real values present in text)
    */
   public extractBiomarkers(text: string): ExtractedMarker[] {
     const markers: ExtractedMarker[] = [];
-    const lower = text.toLowerCase();
 
     // Helper to avoid duplicate markers
     const addMarker = (m: ExtractedMarker) => {
@@ -196,7 +441,7 @@ ${preExtractedText.substring(0, 3000)}`;
     };
 
     // 1. HbA1c (Glycated Hemoglobin)
-    const hba1cMatch = text.match(/(?:hba1c|glycated\s*hemoglobin|glycosylated\s*hb|a1c)[^\d\n]*?(\d+\.?\d*)\s*(%)/i);
+    const hba1cMatch = text.match(/(?:hba1c|glycated\s*hemoglobin|glycosylated\s*hb|a1c)[^\d\n:]*?[:\s-]*(\d+\.?\d*)\s*(%)/i);
     if (hba1cMatch && hba1cMatch[1]) {
       const val = parseFloat(hba1cMatch[1]);
       if (!isNaN(val) && val > 3 && val < 20) {
@@ -214,7 +459,7 @@ ${preExtractedText.substring(0, 3000)}`;
     }
 
     // 2. Fasting Blood Glucose (FBS)
-    const fbsMatch = text.match(/(?:fasting\s*glucose|fasting\s*blood\s*sugar|fbs|fasting\s*plasma\s*glucose)[^\d\n]*?(\d{2,3}(?:\.\d+)?)\s*(mg\/dl|mmol\/l)?/i);
+    const fbsMatch = text.match(/(?:fasting\s*glucose|fasting\s*blood\s*sugar|fbs|fasting\s*plasma\s*glucose)[^\d\n:]*?[:\s-]*(\d{2,3}(?:\.\d+)?)\s*(mg\/dl|mmol\/l)?/i);
     if (fbsMatch && fbsMatch[1]) {
       const val = parseFloat(fbsMatch[1]);
       if (!isNaN(val) && val > 30 && val < 600) {
@@ -233,7 +478,7 @@ ${preExtractedText.substring(0, 3000)}`;
     }
 
     // 3. Postprandial Glucose (PPBS) or Random Glucose
-    const ppbsMatch = text.match(/(?:postprandial\s*glucose|ppbs|random\s*blood\s*sugar|rbs)[^\d\n]*?(\d{2,3}(?:\.\d+)?)\s*(mg\/dl)?/i);
+    const ppbsMatch = text.match(/(?:postprandial\s*glucose|ppbs|random\s*blood\s*sugar|rbs)[^\d\n:]*?[:\s-]*(\d{2,3}(?:\.\d+)?)\s*(mg\/dl)?/i);
     if (ppbsMatch && ppbsMatch[1]) {
       const val = parseFloat(ppbsMatch[1]);
       if (!isNaN(val) && val > 30 && val < 600) {
@@ -266,7 +511,7 @@ ${preExtractedText.substring(0, 3000)}`;
     }
 
     // 5. Total Cholesterol
-    const cholMatch = text.match(/(?:total\s*cholesterol|serum\s*cholesterol)[^\d\n]*?(\d{2,3})\s*(mg\/dl)?/i);
+    const cholMatch = text.match(/(?:total\s*cholesterol|serum\s*cholesterol)[^\d\n:]*?[:\s-]*(\d{2,3})\s*(mg\/dl)?/i);
     if (cholMatch && cholMatch[1]) {
       const val = parseInt(cholMatch[1]);
       if (val >= 80 && val <= 500) {
@@ -281,7 +526,7 @@ ${preExtractedText.substring(0, 3000)}`;
     }
 
     // 6. LDL Cholesterol
-    const ldlMatch = text.match(/(?:ldl(?:\s*cholesterol)?|low\s*density\s*lipoprotein)[^\d\n]*?(\d{2,3})\s*(mg\/dl)?/i);
+    const ldlMatch = text.match(/(?:ldl(?:\s*cholesterol)?|low\s*density\s*lipoprotein)[^\d\n:]*?[:\s-]*(\d{2,3})\s*(mg\/dl)?/i);
     if (ldlMatch && ldlMatch[1]) {
       const val = parseInt(ldlMatch[1]);
       if (val >= 30 && val <= 400) {
@@ -296,7 +541,7 @@ ${preExtractedText.substring(0, 3000)}`;
     }
 
     // 7. HDL Cholesterol
-    const hdlMatch = text.match(/(?:hdl(?:\s*cholesterol)?|high\s*density\s*lipoprotein)[^\d\n]*?(\d{2,3})\s*(mg\/dl)?/i);
+    const hdlMatch = text.match(/(?:hdl(?:\s*cholesterol)?|high\s*density\s*lipoprotein)[^\d\n:]*?[:\s-]*(\d{2,3})\s*(mg\/dl)?/i);
     if (hdlMatch && hdlMatch[1]) {
       const val = parseInt(hdlMatch[1]);
       if (val >= 15 && val <= 150) {
@@ -311,7 +556,7 @@ ${preExtractedText.substring(0, 3000)}`;
     }
 
     // 8. Triglycerides
-    const trigMatch = text.match(/(?:triglycerides|serum\s*triglyceride)[^\d\n]*?(\d{2,3})\s*(mg\/dl)?/i);
+    const trigMatch = text.match(/(?:triglycerides|serum\s*triglyceride)[^\d\n:]*?[:\s-]*(\d{2,3})\s*(mg\/dl)?/i);
     if (trigMatch && trigMatch[1]) {
       const val = parseInt(trigMatch[1]);
       if (val >= 30 && val <= 1000) {
@@ -326,7 +571,7 @@ ${preExtractedText.substring(0, 3000)}`;
     }
 
     // 9. Serum Creatinine (Kidney)
-    const creatMatch = text.match(/(?:creatinine|serum\s*creatinine)[^\d\n]*?(\d{1,2}(?:\.\d+)?)\s*(mg\/dl)?/i);
+    const creatMatch = text.match(/(?:creatinine|serum\s*creatinine)[^\d\n:]*?[:\s-]*(\d{1,2}(?:\.\d+)?)\s*(mg\/dl)?/i);
     if (creatMatch && creatMatch[1]) {
       const val = parseFloat(creatMatch[1]);
       if (val >= 0.2 && val <= 15) {
@@ -356,7 +601,7 @@ ${preExtractedText.substring(0, 3000)}`;
     }
 
     // 11. Vitamin B12
-    const vitB12Match = text.match(/(?:vitamin\s*b12|b12|cyanocobalamin)[^\d\n]*?(\d{2,4})\s*(pg\/ml)?/i);
+    const vitB12Match = text.match(/(?:vitamin\s*b12|b12|cyanocobalamin)[^\d\n:]*?[:\s-]*(\d{2,4})\s*(pg\/ml)?/i);
     if (vitB12Match && vitB12Match[1]) {
       const val = parseInt(vitB12Match[1]);
       if (val >= 50 && val <= 3000) {
@@ -371,7 +616,7 @@ ${preExtractedText.substring(0, 3000)}`;
     }
 
     // 12. Thyroid Stimulating Hormone (TSH)
-    const tshMatch = text.match(/(?:tsh|thyroid\s*stimulating\s*hormone)[^\d\n]*?(\d{1,2}(?:\.\d+)?)\s*(µiu\/ml|uiu\/ml|miu\/l)?/i);
+    const tshMatch = text.match(/(?:tsh|thyroid\s*stimulating\s*hormone)[^\d\n:]*?[:\s-]*(\d{1,2}(?:\.\d+)?)\s*(µiu\/ml|uiu\/ml|miu\/l)?/i);
     if (tshMatch && tshMatch[1]) {
       const val = parseFloat(tshMatch[1]);
       if (val >= 0.01 && val <= 50) {
@@ -386,7 +631,7 @@ ${preExtractedText.substring(0, 3000)}`;
     }
 
     // 13. Platelet Count
-    const pltMatch = text.match(/(?:platelet\s*count|platelets)[^\d\n]*?(\d{2,4}(?:\.\d+)?)\s*(k\/µl|k\/ul|lakhs?\/cumm|\/cumm)?/i);
+    const pltMatch = text.match(/(?:platelet\s*count|platelets)[^\d\n:]*?[:\s-]*(\d{2,4}(?:\.\d+)?)\s*(k\/µl|k\/ul|lakhs?\/cumm|\/cumm)?/i);
     if (pltMatch && pltMatch[1]) {
       const val = parseFloat(pltMatch[1]);
       addMarker({
@@ -398,8 +643,8 @@ ${preExtractedText.substring(0, 3000)}`;
       });
     }
 
-    // 14. White Blood Cells (WBC) / Total Leukocyte Count (TLC)
-    const wbcMatch = text.match(/(?:wbc\s*count|total\s*leukocyte\s*count|tlc)[^\d\n]*?(\d{3,6}(?:\.\d+)?)\s*(\/cumm|k\/µl)?/i);
+    // 14. White Blood Cells (WBC)
+    const wbcMatch = text.match(/(?:wbc\s*count|total\s*leukocyte\s*count|tlc)[^\d\n:]*?[:\s-]*(\d{3,6}(?:\.\d+)?)\s*(\/cumm|k\/µl)?/i);
     if (wbcMatch && wbcMatch[1]) {
       const val = parseFloat(wbcMatch[1]);
       addMarker({
@@ -412,7 +657,7 @@ ${preExtractedText.substring(0, 3000)}`;
     }
 
     // 15. Blood Pressure
-    const bpMatch = text.match(/(?:bp|blood\s*pressure)[^\d\n]*?(\d{2,3})\s*\/\s*(\d{2,3})\s*(mmhg)?/i);
+    const bpMatch = text.match(/(?:bp|blood\s*pressure)[^\d\n:]*?[:\s-]*(\d{2,3})\s*\/\s*(\d{2,3})\s*(mmhg)?/i);
     if (bpMatch && bpMatch[1] && bpMatch[2]) {
       const sys = parseInt(bpMatch[1]);
       const dia = parseInt(bpMatch[2]);
@@ -430,32 +675,29 @@ ${preExtractedText.substring(0, 3000)}`;
     return markers;
   }
 
-  public detectCategory(text: string): "Lab Report" | "Imaging" | "Prescription" | "Vaccination" | "Discharge Summary" {
-    const lower = text.toLowerCase();
-    if (lower.includes('x-ray') || lower.includes('mri') || lower.includes('ct scan') || lower.includes('ultrasound') || lower.includes('radiology') || lower.includes('imaging')) {
-      return 'Imaging';
-    }
-    if (lower.includes('rx') || lower.includes('prescription') || lower.includes('tablet') || lower.includes('capsule') || lower.includes('dosage') || lower.includes('sig:')) {
-      return 'Prescription';
-    }
-    if (lower.includes('vaccine') || lower.includes('vaccination') || lower.includes('dose') || lower.includes('immunization') || lower.includes('booster')) {
-      return 'Vaccination';
-    }
-    if (lower.includes('discharge') || lower.includes('admission') || lower.includes('hospital course') || lower.includes('inpatient')) {
-      return 'Discharge Summary';
-    }
-    return 'Lab Report';
-  }
+  public generateClinicalSummary(text: string, markers: ExtractedMarker[], category: string, filename = ''): string {
+    if (category === 'Imaging') {
+      const mod = markers.find(m => m.name === 'Imaging Modality')?.value || 'Diagnostic Imaging';
+      const reg = markers.find(m => m.name === 'Anatomical Region')?.value || 'Target Area';
+      const imp = markers.find(m => m.name === 'Radiological Impression' || m.name === 'Study Status');
 
-  public generateClinicalSummary(text: string, markers: ExtractedMarker[], category: string): string {
+      if (imp?.status === 'attention' || imp?.status === 'borderline') {
+        return `${mod} for ${reg} completed. Impression: ${imp.value}. Clinical correlation and consultation recommended.`;
+      }
+      return `${mod} for ${reg} completed. Findings appear within normal radiological limits.`;
+    }
+
     if (markers.length === 0) {
-      if (category === 'Imaging') {
-        return `Diagnostic imaging report processed. Normal anatomical views documented without gross radiological abnormalities.`;
-      }
       if (category === 'Prescription') {
-        return `Clinical prescription archived. Medications and physician dosing directions captured.`;
+        return `Clinical prescription archived. Prescribed medications and dosage captured.`;
       }
-      return `Medical ${category.toLowerCase()} processed and archived in personal vault.`;
+      if (category === 'Vaccination') {
+        return `Immunization and vaccination record archived in health vault.`;
+      }
+      if (category === 'Discharge Summary') {
+        return `Hospital clinical discharge summary recorded with diagnosis and inpatient course.`;
+      }
+      return `Medical ${category.toLowerCase()} archived. No standard numerical lab biomarkers detected in this specific document.`;
     }
 
     const borderlineOrHigh = markers.filter(m => m.status === 'borderline' || m.status === 'high' || m.status === 'low' || m.status === 'attention');
@@ -463,10 +705,10 @@ ${preExtractedText.substring(0, 3000)}`;
 
     if (borderlineOrHigh.length > 0) {
       const flagged = borderlineOrHigh.map(m => `${m.name} (${m.value} ${m.unit}, ${m.status.toUpperCase()})`).join(', ');
-      return `Extracted parameters: ${highlights}. Attention needed: ${flagged}. Consult with healthcare professional.`;
+      return `Extracted lab biomarkers: ${highlights}. Parameters flagged: ${flagged}. Please review with your doctor.`;
     }
 
-    return `Extracted ${markers.length} physiological biomarkers: ${highlights}. All parameters within normal physiological intervals.`;
+    return `Extracted ${markers.length} physiological biomarkers: ${highlights}. All parameters appear within normal physiological ranges.`;
   }
 }
 

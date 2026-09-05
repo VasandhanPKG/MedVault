@@ -9,6 +9,8 @@ import recordsRoutes from './routes/records.routes';
 import aiRoutes from './routes/ai.routes';
 import emergencyRoutes from './routes/emergency.routes';
 import analyticsRoutes from './routes/analytics.routes';
+import conditionsRoutes from './routes/conditions.routes';
+import vaccinationsRoutes from './routes/vaccinations.routes';
 
 dotenv.config();
 
@@ -41,6 +43,8 @@ app.use('/api/records', recordsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/conditions', conditionsRoutes);
+app.use('/api/vaccinations', vaccinationsRoutes);
 
 // Health Check
 app.get('/health', (_req, res) => {

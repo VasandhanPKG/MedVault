@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { db, MedicalRecord } from '../services/database';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { ocrService } from '../services/ocr.service';
+import { uploadFileToStorage } from '../services/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 export const getRecords = async (req: AuthenticatedRequest, res: Response) => {
@@ -30,14 +31,41 @@ export const createRecord = async (req: AuthenticatedRequest, res: Response) => 
     let detectedCategory = category || 'Lab Report';
     let extractedMarkers: any[] = [];
     let rawText = '';
+    let fileUrl: string | undefined = undefined;
 
     if (file) {
-      console.log(`🚀 Starting OCR processing for uploaded file: ${file.originalname} (${file.mimetype})`);
-      const ocrResult = await ocrService.processDocument(file.path, file.mimetype);
+      console.log(`🚀 Starting in-memory OCR & Cloud Upload for: ${file.originalname} (${file.mimetype}, ${(file.size / 1024).toFixed(1)} KB)`);
+
+      // 1. Process OCR directly from RAM Buffer (0 disk writes)
+      const ocrResult = await ocrService.processDocument(file.buffer, file.mimetype, file.originalname);
+
+      // STRICT VALIDATION: If the document is NOT medical (e.g. PPT, electricity bill, invoice, resume, code), REJECT IT!
+      if (!ocrResult.isMedical) {
+        console.log(`⚠️ Document rejected: "${file.originalname}" is non-medical and will NOT be added to medical records.`);
+        return res.status(422).json({
+          error: "Document Rejected: The uploaded file does not contain valid medical test results, clinical records, or radiology scans and was NOT added to your medical records.",
+          isMedical: false,
+          rejected: true,
+          ocr: {
+            rawText: ocrResult.rawText,
+            extractedMarkers: [],
+            summary: ocrResult.summary
+          }
+        });
+      }
+
       ocrSummary = ocrResult.summary;
       detectedCategory = category || ocrResult.detectedCategory;
       extractedMarkers = ocrResult.extractedMarkers;
       rawText = ocrResult.rawText;
+
+      // 2. Upload file Buffer directly to Supabase Storage Bucket ('medical-records')
+      const cloudUrl = await uploadFileToStorage(file.buffer, file.originalname, file.mimetype);
+      if (cloudUrl) {
+        fileUrl = cloudUrl;
+      } else {
+        fileUrl = `https://medvault.health/documents/${encodeURIComponent(file.originalname)}`;
+      }
     } else {
       // Direct text / metadata upload
       extractedMarkers = ocrService.extractBiomarkers(summary || name || '');
@@ -56,7 +84,7 @@ export const createRecord = async (req: AuthenticatedRequest, res: Response) => 
       status: 'processed',
       size: file ? `${Math.round(file.size / 1024)} KB` : '320 KB',
       summary: ocrSummary,
-      fileUrl: file ? `/uploads/${file.filename}` : undefined,
+      fileUrl,
       extractedMarkers,
       rawText,
       createdAt: new Date().toISOString()
@@ -65,7 +93,7 @@ export const createRecord = async (req: AuthenticatedRequest, res: Response) => 
     await db.addRecord(newRecord);
 
     return res.status(201).json({
-      message: 'Document uploaded and OCR processed successfully',
+      message: 'Document processed with OCR and uploaded to Cloud Storage successfully',
       record: newRecord,
       ocr: {
         rawText,

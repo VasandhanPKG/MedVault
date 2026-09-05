@@ -32,3 +32,40 @@ if (supabaseUrl && supabaseKey) {
 
 export const supabase = supabaseInstance;
 export const isSupabaseConfigured = (): boolean => supabaseInstance !== null;
+
+/**
+ * Upload a document buffer directly to Supabase Storage Bucket
+ */
+export const uploadFileToStorage = async (
+  buffer: Buffer,
+  filename: string,
+  mimeType: string,
+  bucket = 'medical-records'
+): Promise<string | null> => {
+  if (!supabaseInstance) return null;
+  try {
+    const cleanName = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = `documents/${Date.now()}_${cleanName}`;
+    const { data, error } = await supabaseInstance.storage
+      .from(bucket)
+      .upload(filePath, buffer, {
+        contentType: mimeType,
+        upsert: true
+      });
+
+    if (error) {
+      console.warn('⚠️ Supabase storage upload notice:', error.message);
+      return null;
+    }
+
+    const { data: publicUrlData } = supabaseInstance.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+
+    console.log(`☁️ File uploaded to Supabase Storage: ${publicUrlData.publicUrl}`);
+    return publicUrlData.publicUrl;
+  } catch (err) {
+    console.error('Supabase storage upload exception:', err);
+    return null;
+  }
+};

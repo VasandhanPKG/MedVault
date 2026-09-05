@@ -6,20 +6,22 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "./lib/supabase";
 import { setAuthToken, setStoredUser } from "./lib/api-client";
 
-import LandingPage from "./pages/LandingPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import DashboardPage from "./pages/DashboardPage";
-import RecordsPage from "./pages/RecordsPage";
-import UploadPage from "./pages/UploadPage";
-import AssistantPage from "./pages/AssistantPage";
-import AnalyticsPage from "./pages/AnalyticsPage";
-import RiskPage from "./pages/RiskPage";
-import EmergencyPage from "./pages/EmergencyPage";
-import EmergencyResponderPage from "./pages/EmergencyResponderPage";
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import NotFoundPage from "./pages/NotFoundPage";
+import { LandingPage } from "./pages/LandingPage";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { TimelinePage } from "./pages/TimelinePage";
+import { RecordsPage } from "./pages/RecordsPage";
+import { VaccinationsPage } from "./pages/VaccinationsPage";
+import { UploadPage } from "./pages/UploadPage";
+import { AssistantPage } from "./pages/AssistantPage";
+import { AnalyticsPage } from "./pages/AnalyticsPage";
+import { RiskPage } from "./pages/RiskPage";
+import { EmergencyPage } from "./pages/EmergencyPage";
+import { EmergencyResponderPage } from "./pages/EmergencyResponderPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { SettingsPage } from "./pages/SettingsPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,13 +86,15 @@ export function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/timeline" element={<TimelinePage />} />
             <Route path="/records" element={<RecordsPage />} />
+            <Route path="/vaccinations" element={<VaccinationsPage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/assistant" element={<AssistantPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/risk" element={<RiskPage />} />
             <Route path="/emergency" element={<EmergencyPage />} />
-            {/* Standalone First-Responder Route */}
+            {/* Scoped Recipient & Triage Viewer Route */}
             <Route path="/e/:token" element={<EmergencyResponderPage />} />
             <Route path="/emergency/verify" element={<EmergencyResponderPage />} />
             <Route path="/profile" element={<ProfilePage />} />
