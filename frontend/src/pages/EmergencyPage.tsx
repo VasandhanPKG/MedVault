@@ -228,7 +228,29 @@ export function EmergencyPage() {
 
   const currentTab = qrTabs.find((t) => t.id === activeTab) || qrTabs[0];
   const TabIcon = currentTab.icon;
-  const url = token ? `${window.location.origin}/e/${token}` : "";
+
+  // Build resilient QR URL with embedded patient profile data for offline scanning
+  let url = "";
+  if (token) {
+    try {
+      const compactPayload = {
+        tok: token,
+        typ: activeTab,
+        name: patient.name || "Patient",
+        dob: patient.dob || "",
+        gender: patient.gender || "",
+        bg: patient.bloodGroup || "Not set",
+        all: patient.allergies || [],
+        cnd: patient.conditions || [],
+        ec: patient.emergencyContact || { name: "", phone: "", relation: "" },
+        exp: new Date(Date.now() + durationHours * 3600 * 1000).toISOString(),
+      };
+      const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(compactPayload))));
+      url = `${window.location.origin}/e/${token}?d=${encodedData}`;
+    } catch {
+      url = `${window.location.origin}/e/${token}`;
+    }
+  }
 
   return (
     <AppShell

@@ -39,17 +39,53 @@ export function EmergencyResponderPage() {
       return;
     }
 
+    // 1. Try extracting embedded encoded data parameter from URL (works 100% offline or across separate networks)
+    const searchParams = new URLSearchParams(window.location.search);
+    const dParam = searchParams.get("d");
+    let hasOfflineData = false;
+
+    if (dParam) {
+      try {
+        const decodedJson = decodeURIComponent(escape(atob(dParam)));
+        const parsed = JSON.parse(decodedJson);
+        const offlinePayload = {
+          status: `ACTIVE_${(parsed.typ || "emergency").toUpperCase()}_ACCESS`,
+          type: parsed.typ || "emergency",
+          patient: {
+            name: parsed.name || "Patient",
+            dob: parsed.dob || "Not specified",
+            gender: parsed.gender || "Unspecified",
+            bloodGroup: parsed.bg || "Not set",
+            allergies: parsed.all || [],
+            conditions: parsed.cnd || [],
+            emergencyContact: parsed.ec || { name: "Not specified", relation: "Family", phone: "" },
+            height: "Not set",
+            weight: "Not set",
+          },
+          validUntil: parsed.exp || new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+        };
+        setData(offlinePayload);
+        hasOfflineData = true;
+      } catch (e) {
+        console.warn("Could not decode embedded emergency QR payload:", e);
+      }
+    }
+
+    // 2. Fetch live data from backend to get live vitals, conditions, and records
     api.verifyEmergencyToken(token)
       .then((res) => {
         if (res && res.patient) {
           setData(res);
-        } else {
+          setError(null);
+        } else if (!hasOfflineData) {
           setError("Emergency access token is invalid or expired.");
         }
       })
       .catch((err: any) => {
-        console.error("Token verification error:", err);
-        setError(err.message || "Emergency access token is invalid, expired, or has been revoked.");
+        console.warn("Live token verification note:", err);
+        if (!hasOfflineData) {
+          setError(err.message || "Emergency access token is invalid, expired, or has been revoked.");
+        }
       })
       .finally(() => setLoading(false));
   }, [token]);
