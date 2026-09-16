@@ -10,7 +10,7 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -29,7 +29,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
         email: decoded.email,
         name: decoded.name || decoded.email.split('@')[0],
       };
-      ensureUserExists(req.user);
+      await ensureUserExists(req.user);
       return next();
     }
   } catch {
@@ -46,7 +46,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
           email,
           name
         };
-        ensureUserExists(req.user);
+        await ensureUserExists(req.user);
         return next();
       }
     } catch (e) {
@@ -57,28 +57,32 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
   return res.status(403).json({ error: 'Invalid or expired authentication token' });
 };
 
-function ensureUserExists(user: { id: string; email: string; name: string }) {
-  const existing = db.findUserById(user.id);
-  if (!existing) {
-    const newUser: UserAccount = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      dob: '1995-01-01',
-      gender: 'Unspecified',
-      bloodGroup: 'Not set',
-      phone: '+91 00000 00000',
-      height: '170 cm',
-      weight: '65 kg',
-      allergies: [],
-      conditions: [],
-      emergencyContact: {
-        name: 'Emergency Contact',
-        relation: 'Family',
-        phone: '+91 00000 00000'
-      },
-      passwordHash: ''
-    };
-    db.createUser(newUser);
+async function ensureUserExists(user: { id: string; email: string; name: string }) {
+  try {
+    const existing = await db.findUserById(user.id);
+    if (!existing) {
+      const newUser: UserAccount = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        dob: '1995-01-01',
+        gender: 'Unspecified',
+        bloodGroup: 'Not set',
+        phone: '+91 00000 00000',
+        height: '170 cm',
+        weight: '65 kg',
+        allergies: [],
+        conditions: [],
+        emergencyContact: {
+          name: 'Emergency Contact',
+          relation: 'Family',
+          phone: '+91 00000 00000'
+        },
+        passwordHash: ''
+      };
+      await db.createUser(newUser);
+    }
+  } catch (err) {
+    console.error('ensureUserExists error:', err);
   }
 }

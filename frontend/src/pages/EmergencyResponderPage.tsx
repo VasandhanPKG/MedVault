@@ -44,51 +44,12 @@ export function EmergencyResponderPage() {
         if (res && res.patient) {
           setData(res);
         } else {
-          const type = token.startsWith("DOC-") ? "doctor" : token.startsWith("RX-") ? "pharmacy" : token.startsWith("GEN-") ? "general" : "emergency";
-          setData({
-            status: `ACTIVE_${type.toUpperCase()}_ACCESS`,
-            type,
-            patient: {
-              name: "Aarav Sharma",
-              dob: "1992-04-18",
-              gender: "Male",
-              bloodGroup: "O+",
-              allergies: ["Penicillin", "Dust Mites"],
-              conditions: ["L4-L5 Lumbar Disc Bulge", "Pre-diabetes", "Vitamin D deficiency"],
-              emergencyContact: {
-                name: "Meera Sharma",
-                relation: "Spouse",
-                phone: "+91 98111 20034",
-              },
-              height: "178 cm",
-              weight: "76 kg",
-            },
-            validUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          });
+          setError("Emergency access token is invalid or expired.");
         }
       })
-      .catch(() => {
-        const type = token.startsWith("DOC-") ? "doctor" : token.startsWith("RX-") ? "pharmacy" : token.startsWith("GEN-") ? "general" : "emergency";
-        setData({
-          status: `ACTIVE_${type.toUpperCase()}_ACCESS`,
-          type,
-          patient: {
-            name: "Aarav Sharma",
-            dob: "1992-04-18",
-            gender: "Male",
-            bloodGroup: "O+",
-            allergies: ["Penicillin", "Dust Mites"],
-            conditions: ["L4-L5 Lumbar Disc Bulge", "Pre-diabetes", "Vitamin D deficiency"],
-            emergencyContact: {
-              name: "Meera Sharma",
-              relation: "Spouse",
-              phone: "+91 98111 20034",
-            },
-            height: "178 cm",
-            weight: "76 kg",
-          },
-          validUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        });
+      .catch((err: any) => {
+        console.error("Token verification error:", err);
+        setError(err.message || "Emergency access token is invalid, expired, or has been revoked.");
       })
       .finally(() => setLoading(false));
   }, [token]);

@@ -118,17 +118,18 @@ export function EmergencyPage() {
   const [previewDeviceMode, setPreviewDeviceMode] = useState<"mobile" | "desktop">("mobile");
   const qrRef = useRef<HTMLDivElement>(null);
 
+  const storedUser = getStoredUser();
   const [patient, setPatient] = useState<any>(
-    getStoredUser() || {
-      name: "Aarav Sharma",
-      dob: "1992-04-18",
-      gender: "Male",
-      bloodGroup: "O+",
-      allergies: ["Penicillin", "Dust mite"],
-      conditions: ["L4-L5 Lumbar Disc Bulge", "Pre-diabetes", "Vitamin D deficiency"],
-      emergencyContact: { name: "Meera Sharma", relation: "Spouse", phone: "+91 98111 20034" },
-      height: "178 cm",
-      weight: "76 kg",
+    storedUser || {
+      name: "Patient",
+      dob: "Not specified",
+      gender: "Unspecified",
+      bloodGroup: "Not set",
+      allergies: [],
+      conditions: [],
+      emergencyContact: { name: "Not specified", relation: "Family", phone: "" },
+      height: "Not set",
+      weight: "Not set",
     }
   );
 
@@ -160,11 +161,21 @@ export function EmergencyPage() {
   };
 
   useEffect(() => {
-    api.getProfile()
-      .then((p) => {
-        if (p && p.name) setPatient(p);
-      })
-      .catch(() => {});
+    Promise.all([
+      api.getProfile().catch(() => null),
+      api.getConditions().catch(() => []),
+    ]).then(([profileData, conditionsData]) => {
+      if (profileData && profileData.name) {
+        const conditionTitles = Array.isArray(conditionsData) ? conditionsData.map((c: any) => c.title) : [];
+        const mergedConditions = Array.from(new Set([...(profileData.conditions || []), ...conditionTitles]));
+        const updated = {
+          ...profileData,
+          conditions: mergedConditions,
+        };
+        setPatient(updated);
+        setStoredUser(updated);
+      }
+    });
     loadTokens();
     generate("emergency", 24);
   }, []);

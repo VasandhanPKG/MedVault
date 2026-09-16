@@ -54,15 +54,16 @@ export function ClinicalDossierModal({
     }
   }, [open, initialIntakes]);
 
-  const patient = getStoredUser() || {
-    name: "Aarav Sharma",
-    dob: "1992-04-18",
-    gender: "Male",
-    bloodGroup: "O+",
-    height: "178 cm",
-    weight: "76 kg",
-    allergies: ["Penicillin", "Dust mite"],
-    emergencyContact: { name: "Meera Sharma", relation: "Spouse", phone: "+91 98111 20034" },
+  const stored = getStoredUser();
+  const patient = stored || {
+    name: "Patient",
+    dob: "Not specified",
+    gender: "Unspecified",
+    bloodGroup: "Not set",
+    height: "Not set",
+    weight: "Not set",
+    allergies: [],
+    emergencyContact: { name: "Not specified", relation: "Family", phone: "" },
   };
 
   const handlePrint = () => {

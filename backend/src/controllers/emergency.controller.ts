@@ -9,30 +9,31 @@ export const generateEmergencyQR = async (req: AuthenticatedRequest, res: Respon
   let user = await db.findUserById(userId);
 
   if (!user) {
-    user = await db.findUserById('usr-1');
-  }
-
-  if (!user) {
     user = {
       id: userId,
-      name: req.user?.name || 'Aarav Sharma',
-      dob: '1992-04-18',
-      gender: 'Male',
-      bloodGroup: 'O+',
-      email: req.user?.email || 'patient@medvault.health',
-      phone: '+91 98200 41122',
-      height: '178 cm',
-      weight: '76 kg',
-      allergies: ['Penicillin', 'Dust mite'],
-      conditions: ['L4-L5 Lumbar Disc Bulge', 'Pre-diabetes', 'Vitamin D deficiency'],
+      name: req.user?.name || 'Patient',
+      dob: 'Not specified',
+      gender: 'Unspecified',
+      bloodGroup: 'Not set',
+      email: req.user?.email || '',
+      phone: '',
+      height: '',
+      weight: '',
+      allergies: [],
+      conditions: [],
       emergencyContact: {
-        name: 'Meera Sharma',
-        relation: 'Spouse',
-        phone: '+91 98111 20034'
+        name: 'Not specified',
+        relation: 'Family',
+        phone: ''
       },
       passwordHash: ''
     };
   }
+
+  // Fetch actual user conditions from the database
+  const userConditions = await db.getConditions(userId);
+  const conditionTitles = (userConditions || []).map(c => c.title);
+  const finalConditions = Array.from(new Set([...(user.conditions || []), ...conditionTitles]));
 
   const prefixMap: Record<string, string> = {
     emergency: 'EMG',
@@ -48,16 +49,16 @@ export const generateEmergencyQR = async (req: AuthenticatedRequest, res: Respon
   const hours = Number(durationHours) || 24;
   const expiresAt = hours > 0 
     ? new Date(Date.now() + hours * 60 * 60 * 1000).toISOString()
-    : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 year if permanent
+    : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
 
   const access: EmergencyAccess = {
     token,
     patientId: user.id,
     patientName: user.name,
-    bloodGroup: user.bloodGroup,
-    allergies: user.allergies,
-    conditions: user.conditions,
-    emergencyContact: user.emergencyContact,
+    bloodGroup: user.bloodGroup || 'Not set',
+    allergies: user.allergies || [],
+    conditions: finalConditions,
+    emergencyContact: user.emergencyContact || { name: 'Not specified', relation: '', phone: '' },
     type: type as any,
     expiresAt,
     createdAt: new Date().toISOString()
@@ -65,13 +66,10 @@ export const generateEmergencyQR = async (req: AuthenticatedRequest, res: Respon
 
   await db.createEmergencyToken(access);
 
-  const qrDataUrl = `https://medvault.health/e/${token}`;
-
   return res.json({
     message: `${type.toUpperCase()} access QR token generated`,
     token,
     type,
-    qrDataUrl,
     expiresAt,
     emergencyData: access
   });
@@ -80,11 +78,8 @@ export const generateEmergencyQR = async (req: AuthenticatedRequest, res: Respon
 export const listUserTokens = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id || 'usr-1';
-    let tokens = await db.getUserEmergencyTokens(userId);
-    if ((!tokens || tokens.length === 0) && userId !== 'usr-1') {
-      tokens = await db.getUserEmergencyTokens('usr-1');
-    }
-    return res.json(tokens);
+    const tokens = await db.getUserEmergencyTokens(userId);
+    return res.json(tokens || []);
   } catch (error) {
     console.error('listUserTokens error:', error);
     return res.status(500).json({ error: 'Failed to list active tokens' });
@@ -105,28 +100,10 @@ export const revokeEmergencyToken = async (req: AuthenticatedRequest, res: Respo
 
 export const verifyEmergencyToken = async (req: AuthenticatedRequest, res: Response) => {
   const { token } = req.params;
-  let access = await db.getEmergencyToken(token as string);
+  const access = await db.getEmergencyToken(token as string);
 
   if (!access) {
-    // Graceful fallback for formatted tokens to allow preview
-    if (token && (token.startsWith('EMG-') || token.startsWith('DOC-') || token.startsWith('RX-') || token.startsWith('GEN-') || token === 'verify')) {
-      const type = token.startsWith('DOC-') ? 'doctor' : token.startsWith('RX-') ? 'pharmacy' : token.startsWith('GEN-') ? 'general' : 'emergency';
-      const usr = await db.findUserById('usr-1');
-      access = {
-        token,
-        patientId: usr?.id || 'usr-1',
-        patientName: usr?.name || 'Aarav Sharma',
-        bloodGroup: usr?.bloodGroup || 'O+',
-        allergies: usr?.allergies || ['Penicillin', 'Dust mite'],
-        conditions: usr?.conditions || ['L4-L5 Lumbar Disc Bulge', 'Pre-diabetes'],
-        emergencyContact: usr?.emergencyContact || { name: 'Meera Sharma', relation: 'Spouse', phone: '+91 98111 20034' },
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        type: type as any,
-        createdAt: new Date().toISOString()
-      };
-    } else {
-      return res.status(404).json({ error: 'Invalid or expired access token' });
-    }
+    return res.status(404).json({ error: 'Invalid or expired access token' });
   }
 
   if (new Date(access.expiresAt) < new Date()) {
@@ -143,15 +120,15 @@ export const verifyEmergencyToken = async (req: AuthenticatedRequest, res: Respo
   const qrType = access.type || 'emergency';
 
   const basePatient = {
-    name: access.patientName,
+    name: user?.name || access.patientName || 'Patient',
     dob: user?.dob || 'Not specified',
     gender: user?.gender || 'Not specified',
-    bloodGroup: access.bloodGroup || user?.bloodGroup || 'O+',
-    allergies: access.allergies || user?.allergies || [],
-    conditions: access.conditions || user?.conditions || [],
-    emergencyContact: access.emergencyContact || user?.emergencyContact,
-    height: user?.height || '178 cm',
-    weight: user?.weight || '76 kg'
+    bloodGroup: user?.bloodGroup || access.bloodGroup || 'Not set',
+    allergies: user?.allergies && user.allergies.length > 0 ? user.allergies : access.allergies || [],
+    conditions: conditions && conditions.length > 0 ? conditions.map(c => c.title) : access.conditions || [],
+    emergencyContact: user?.emergencyContact || access.emergencyContact || { name: 'Not specified', relation: '', phone: '' },
+    height: user?.height || 'Not set',
+    weight: user?.weight || 'Not set'
   };
 
   // Scope response payload based on QR role
