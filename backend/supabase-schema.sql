@@ -120,6 +120,35 @@ CREATE POLICY "Allow all access on ai_chat"
     USING (true)
     WITH CHECK (true);
 
+-- 6. Create Clinical Interviews Table (Department-Specific Adaptive AI Intake)
+CREATE TABLE IF NOT EXISTS public.clinical_interviews (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    department_id TEXT NOT NULL,
+    department_name TEXT NOT NULL,
+    language TEXT NOT NULL DEFAULT 'en',
+    status TEXT NOT NULL DEFAULT 'in_progress',
+    conversation JSONB DEFAULT '[]'::jsonb,
+    structured_data JSONB DEFAULT '{}'::jsonb,
+    summary JSONB DEFAULT '{}'::jsonb,
+    red_flags JSONB DEFAULT '[]'::jsonb,
+    doctor_notes TEXT,
+    verified_by TEXT,
+    verified_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_clinical_interviews_user_id ON public.clinical_interviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_clinical_interviews_dept ON public.clinical_interviews(department_id);
+
+ALTER TABLE public.clinical_interviews ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access on clinical_interviews"
+    ON public.clinical_interviews FOR ALL
+    USING (true)
+    WITH CHECK (true);
+
 -- ==============================================================================
 -- Seed Demo User for Initial Testing
 -- ==============================================================================

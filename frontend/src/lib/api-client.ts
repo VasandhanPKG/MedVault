@@ -182,8 +182,21 @@ export const api = {
     apiFetch('/chat/message', { method: 'POST', body: JSON.stringify(data) }),
   askAssistant: (dataOrMessage: any) => {
     const payload = typeof dataOrMessage === 'string' ? { message: dataOrMessage } : dataOrMessage;
-    return apiFetch('/chat/message', { method: 'POST', body: JSON.stringify(payload) });
+    return apiFetch('/ai/assistant', { method: 'POST', body: JSON.stringify(payload) });
   },
   getChatHistory: () => apiFetch('/chat/history'),
   clearChatHistory: () => apiFetch('/chat/history', { method: 'DELETE' }),
+
+  // Department-Specific Adaptive AI Intake
+  getIntakeDepartments: () => apiFetch('/ai/intake/departments'),
+  startIntakeSession: (data: { departmentId: string; language?: string }) =>
+    apiFetch('/ai/intake/session/start', { method: 'POST', body: JSON.stringify(data) }),
+  submitIntakeAnswer: (sessionId: string, data: { answerText: string; inputMode?: 'voice' | 'text' | 'touch'; language?: string }) =>
+    apiFetch(`/ai/intake/session/${sessionId}/answer`, { method: 'POST', body: JSON.stringify(data) }),
+  getIntakeSummary: (sessionId: string) => apiFetch(`/ai/intake/session/${sessionId}/summary`),
+  updateIntakeSummary: (sessionId: string, data: { summary?: any; doctorNotes?: string }) =>
+    apiFetch(`/ai/intake/session/${sessionId}/summary`, { method: 'PUT', body: JSON.stringify(data) }),
+  verifyIntakeSession: (sessionId: string, data: { doctorName?: string; doctorNotes?: string }) =>
+    apiFetch(`/ai/intake/session/${sessionId}/verify`, { method: 'POST', body: JSON.stringify(data) }),
+  getPatientIntakes: () => apiFetch('/ai/intake/patient/history'),
 };

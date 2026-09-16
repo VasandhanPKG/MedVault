@@ -21,6 +21,7 @@ import { EmergencyPage } from "./pages/EmergencyPage";
 import { EmergencyResponderPage } from "./pages/EmergencyResponderPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { IntakePage } from "./pages/IntakePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
 const queryClient = new QueryClient({
@@ -91,6 +92,8 @@ export function App() {
             <Route path="/vaccinations" element={<VaccinationsPage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/assistant" element={<AssistantPage />} />
+            <Route path="/intake" element={<IntakePage />} />
+            <Route path="/intake/:sessionId" element={<IntakePage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/risk" element={<RiskPage />} />
             <Route path="/emergency" element={<EmergencyPage />} />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Download,
   FileCheck2,
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getStoredUser } from "@/lib/api-client";
+import { api, getStoredUser } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
 interface DossierProps {
@@ -31,6 +31,7 @@ interface DossierProps {
   conditions?: any[];
   records?: any[];
   vaccinations?: any[];
+  intakes?: any[];
 }
 
 export function ClinicalDossierModal({
@@ -39,7 +40,20 @@ export function ClinicalDossierModal({
   conditions = [],
   records = [],
   vaccinations = [],
+  intakes: initialIntakes,
 }: DossierProps) {
+  const [intakes, setIntakes] = useState<any[]>(initialIntakes || []);
+
+  useEffect(() => {
+    if (open && !initialIntakes) {
+      api.getPatientIntakes()
+        .then((res) => {
+          if (res.interviews) setIntakes(res.interviews);
+        })
+        .catch(() => {});
+    }
+  }, [open, initialIntakes]);
+
   const patient = getStoredUser() || {
     name: "Aarav Sharma",
     dob: "1992-04-18",
@@ -149,6 +163,43 @@ export function ClinicalDossierModal({
               )}
             </div>
           </div>
+
+          {/* Department-Specific AI Clinical Intake Summary */}
+          {intakes && intakes.length > 0 && intakes[0]?.summary && (
+            <div className="space-y-2.5 bg-primary/10 border border-primary/30 rounded-2xl p-4 text-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex size-6 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-[10px]">
+                    AI
+                  </span>
+                  <span className="font-bold text-sm text-primary">
+                    {intakes[0].departmentName} Pre-Consultation Intake
+                  </span>
+                </div>
+                <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">
+                  {intakes[0].status === "verified" ? "Clinician Verified" : "Patient Self-Reported"}
+                </Badge>
+              </div>
+
+              <p className="text-white print:text-black font-semibold text-xs">
+                <strong>Chief Complaint:</strong> {intakes[0].summary.chiefComplaint}
+              </p>
+              <p className="text-slate-300 print:text-slate-700 text-[11px] leading-relaxed">
+                {intakes[0].summary.clinicalNarrative}
+              </p>
+
+              {intakes[0].summary.structuredFields && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                  {Object.entries(intakes[0].summary.structuredFields).slice(0, 4).map(([k, v]) => (
+                    <div key={k} className="bg-slate-900/80 print:bg-slate-100 rounded-xl p-2">
+                      <span className="text-slate-400 print:text-slate-600 block text-[9px] uppercase font-bold">{k}</span>
+                      <strong className="text-white print:text-black text-[11px] truncate block">{String(v)}</strong>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Section 2: Patient Health & Illness Journey Timeline */}
           <div className="space-y-3">

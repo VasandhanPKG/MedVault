@@ -575,6 +575,550 @@
       "type": "general",
       "expiresAt": "2026-09-04T07:53:35.289Z",
       "createdAt": "2026-09-03T07:53:35.289Z"
+    },
+    {
+      "token": "EMG-5F57C57B",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:28.209Z",
+      "createdAt": "2026-09-16T08:13:28.209Z"
+    },
+    {
+      "token": "EMG-F46382FB",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:28.336Z",
+      "createdAt": "2026-09-16T08:13:28.336Z"
+    },
+    {
+      "token": "EMG-16E94D60",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:35.148Z",
+      "createdAt": "2026-09-16T08:13:35.148Z"
+    },
+    {
+      "token": "EMG-85EAB8D3",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:35.160Z",
+      "createdAt": "2026-09-16T08:13:35.160Z"
+    },
+    {
+      "token": "DOC-097731AC",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "doctor",
+      "expiresAt": "2026-09-17T08:13:38.489Z",
+      "createdAt": "2026-09-16T08:13:38.489Z"
+    },
+    {
+      "token": "RX-6701828A",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "pharmacy",
+      "expiresAt": "2026-09-17T08:13:38.827Z",
+      "createdAt": "2026-09-16T08:13:38.827Z"
+    },
+    {
+      "token": "EMG-8B23F462",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:39.314Z",
+      "createdAt": "2026-09-16T08:13:39.314Z"
+    },
+    {
+      "token": "GEN-88A29F46",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "general",
+      "expiresAt": "2026-09-17T08:13:39.701Z",
+      "createdAt": "2026-09-16T08:13:39.701Z"
+    },
+    {
+      "token": "EMG-008E8230",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:40.128Z",
+      "createdAt": "2026-09-16T08:13:40.128Z"
+    },
+    {
+      "token": "GEN-5916D057",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "general",
+      "expiresAt": "2026-09-17T08:13:40.585Z",
+      "createdAt": "2026-09-16T08:13:40.585Z"
+    },
+    {
+      "token": "DOC-57DF6ACD",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "doctor",
+      "expiresAt": "2026-09-17T08:13:40.871Z",
+      "createdAt": "2026-09-16T08:13:40.871Z"
+    },
+    {
+      "token": "EMG-D5579159",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:41.170Z",
+      "createdAt": "2026-09-16T08:13:41.170Z"
+    },
+    {
+      "token": "EMG-733A73A8",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:41.586Z",
+      "createdAt": "2026-09-16T08:13:41.586Z"
+    },
+    {
+      "token": "EMG-0650E63E",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:41.711Z",
+      "createdAt": "2026-09-16T08:13:41.711Z"
+    },
+    {
+      "token": "EMG-ACFAC9B3",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:41.880Z",
+      "createdAt": "2026-09-16T08:13:41.880Z"
+    },
+    {
+      "token": "EMG-21491B1C",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:42.005Z",
+      "createdAt": "2026-09-16T08:13:42.005Z"
+    },
+    {
+      "token": "DOC-B26ABA5F",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "doctor",
+      "expiresAt": "2026-09-17T08:13:42.261Z",
+      "createdAt": "2026-09-16T08:13:42.261Z"
+    },
+    {
+      "token": "DOC-55577360",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "doctor",
+      "expiresAt": "2026-09-17T08:13:42.719Z",
+      "createdAt": "2026-09-16T08:13:42.719Z"
+    },
+    {
+      "token": "DOC-4301EB69",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "doctor",
+      "expiresAt": "2026-09-17T08:13:42.816Z",
+      "createdAt": "2026-09-16T08:13:42.816Z"
+    },
+    {
+      "token": "RX-F4108203",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "pharmacy",
+      "expiresAt": "2026-09-17T08:13:43.427Z",
+      "createdAt": "2026-09-16T08:13:43.427Z"
+    },
+    {
+      "token": "RX-5F57DB26",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "pharmacy",
+      "expiresAt": "2026-09-17T08:13:43.621Z",
+      "createdAt": "2026-09-16T08:13:43.621Z"
+    },
+    {
+      "token": "RX-3B06F74C",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "pharmacy",
+      "expiresAt": "2026-09-17T08:13:43.746Z",
+      "createdAt": "2026-09-16T08:13:43.746Z"
+    },
+    {
+      "token": "RX-6DF00F38",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "pharmacy",
+      "expiresAt": "2026-09-17T08:13:43.935Z",
+      "createdAt": "2026-09-16T08:13:43.935Z"
+    },
+    {
+      "token": "RX-E4AC1218",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "pharmacy",
+      "expiresAt": "2026-09-17T08:13:45.165Z",
+      "createdAt": "2026-09-16T08:13:45.165Z"
+    },
+    {
+      "token": "RX-A5F121BF",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "pharmacy",
+      "expiresAt": "2026-09-17T08:13:45.386Z",
+      "createdAt": "2026-09-16T08:13:45.386Z"
+    },
+    {
+      "token": "RX-4F05CFB4",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "pharmacy",
+      "expiresAt": "2026-09-17T08:13:46.496Z",
+      "createdAt": "2026-09-16T08:13:46.496Z"
+    },
+    {
+      "token": "GEN-96206DC6",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "general",
+      "expiresAt": "2026-09-17T08:13:47.547Z",
+      "createdAt": "2026-09-16T08:13:47.547Z"
+    },
+    {
+      "token": "RX-2035A14D",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "pharmacy",
+      "expiresAt": "2026-09-17T08:13:48.901Z",
+      "createdAt": "2026-09-16T08:13:48.901Z"
+    },
+    {
+      "token": "DOC-E8D9F9DA",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "doctor",
+      "expiresAt": "2026-09-17T08:13:49.227Z",
+      "createdAt": "2026-09-16T08:13:49.227Z"
+    },
+    {
+      "token": "EMG-E09FD229",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:13:49.610Z",
+      "createdAt": "2026-09-16T08:13:49.610Z"
+    },
+    {
+      "token": "EMG-DB96826A",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:14:11.972Z",
+      "createdAt": "2026-09-16T08:14:11.972Z"
+    },
+    {
+      "token": "EMG-DEFA6982",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "emergency",
+      "expiresAt": "2026-09-17T08:14:12.000Z",
+      "createdAt": "2026-09-16T08:14:12.000Z"
+    },
+    {
+      "token": "DOC-85FB00A8",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "doctor",
+      "expiresAt": "2026-09-17T08:14:13.534Z",
+      "createdAt": "2026-09-16T08:14:13.534Z"
+    },
+    {
+      "token": "RX-5BBBCC32",
+      "patientId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "bloodGroup": "B+",
+      "allergies": [],
+      "conditions": [],
+      "emergencyContact": {
+        "name": "Emergency Contact",
+        "relation": "Family",
+        "phone": "+91 63820 41993"
+      },
+      "type": "pharmacy",
+      "expiresAt": "2026-09-17T08:14:14.186Z",
+      "createdAt": "2026-09-16T08:14:14.186Z"
     }
   ],
   "conditions": [
@@ -744,6 +1288,181 @@
       "clinic": "Metro Community Care",
       "status": "completed",
       "createdAt": "2022-04-18T11:00:00.000Z"
+    }
+  ],
+  "interviews": [
+    {
+      "id": "intake-1789495889669-20e987",
+      "userId": "usr-1",
+      "patientName": "Aarav Sharma",
+      "departmentId": "dental",
+      "departmentName": "Dental & Oral Maxillofacial",
+      "language": "ta",
+      "status": "verified",
+      "currentSlotIndex": 3,
+      "totalSlots": 8,
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "இன்று நீங்கள் சந்திக்கும் முதன்மையான பல் பிரச்சனை என்ன?",
+          "slotKey": "chiefComplaint",
+          "timestamp": "2026-09-15T18:11:29.670Z"
+        },
+        {
+          "role": "user",
+          "text": "பல் வலி மற்றும் கூச்சம் கீழ் வலது பக்கம்",
+          "slotKey": "chiefComplaint",
+          "inputMode": "voice",
+          "timestamp": "2026-09-15T18:11:37.452Z"
+        },
+        {
+          "role": "assistant",
+          "text": "உங்கள் வாயில் எந்த பகுதியில் வலி அல்லது அசௌகரியம் உள்ளது?",
+          "slotKey": "painLocation",
+          "timestamp": "2026-09-15T18:11:37.454Z"
+        },
+        {
+          "role": "user",
+          "text": "நேத்து சூடா காபி குடிச்சப்போ வலி அதிகமாச்சு, 3 நாட்களாக உள்ளது",
+          "slotKey": "painLocation",
+          "inputMode": "text",
+          "timestamp": "2026-09-15T18:11:44.555Z"
+        },
+        {
+          "role": "assistant",
+          "text": "இந்த பல் வலி அல்லது பிரச்சனை எப்போது தொடங்கியது?",
+          "slotKey": "duration",
+          "timestamp": "2026-09-15T18:11:44.556Z"
+        }
+      ],
+      "collectedData": {
+        "chiefComplaint": "பல் வலி மற்றும் கூச்சம் கீழ் வலது பக்கம்",
+        "painLocation": "நேத்து சூடா காபி குடிச்சப்போ வலி அதிகமாச்சு, 3 நாட்களாக உள்ளது"
+      },
+      "redFlags": [],
+      "isVerified": true,
+      "createdAt": "2026-09-15T18:11:29.670Z",
+      "updatedAt": "2026-09-15T18:11:51.660Z",
+      "verifiedBy": "Dr. Sarah Bennett, DDS",
+      "verifiedAt": "2026-09-15T18:11:51.660Z",
+      "doctorNotes": "Lower right first molar evaluated. Mild percussion sensitivity. Recommended periapical radiograph."
+    },
+    {
+      "id": "intake-1789545901074-7de32f",
+      "userId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "departmentId": "cardiology",
+      "departmentName": "Cardiology & Vascular Medicine",
+      "language": "en",
+      "status": "verified",
+      "currentSlotIndex": 4,
+      "totalSlots": 4,
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "What cardiac or chest symptoms prompted your visit today?",
+          "slotKey": "chiefComplaint",
+          "timestamp": "2026-09-16T08:05:01.075Z"
+        },
+        {
+          "role": "user",
+          "text": "Shortness of Breath (Dyspnea)",
+          "slotKey": "chiefComplaint",
+          "inputMode": "touch",
+          "timestamp": "2026-09-16T08:05:15.318Z"
+        },
+        {
+          "role": "assistant",
+          "text": "How would you describe the feeling in your chest?",
+          "slotKey": "chestPainCharacter",
+          "timestamp": "2026-09-16T08:05:15.319Z"
+        },
+        {
+          "role": "user",
+          "text": "Not sure / skipped",
+          "slotKey": "chestPainCharacter",
+          "inputMode": "touch",
+          "timestamp": "2026-09-16T08:06:14.922Z"
+        },
+        {
+          "role": "assistant",
+          "text": "Does the chest sensation spread or radiate to other areas?",
+          "slotKey": "radiation",
+          "timestamp": "2026-09-16T08:06:14.922Z"
+        },
+        {
+          "role": "user",
+          "text": "Spreads to Left Arm or Shoulder",
+          "slotKey": "radiation",
+          "inputMode": "touch",
+          "timestamp": "2026-09-16T08:06:19.636Z"
+        },
+        {
+          "role": "assistant",
+          "text": "Does walking, climbing stairs, or physical exertion trigger or worsen it?",
+          "slotKey": "exertionRelation",
+          "timestamp": "2026-09-16T08:06:19.636Z"
+        },
+        {
+          "role": "user",
+          "text": "Occurs at complete rest",
+          "slotKey": "exertionRelation",
+          "inputMode": "touch",
+          "timestamp": "2026-09-16T08:06:24.605Z"
+        }
+      ],
+      "collectedData": {
+        "chiefComplaint": "Shortness of Breath (Dyspnea)",
+        "chestPainCharacter": "Not sure / skipped",
+        "radiation": "Spreads to Left Arm or Shoulder",
+        "exertionRelation": "Occurs at complete rest"
+      },
+      "redFlags": [],
+      "isVerified": true,
+      "createdAt": "2026-09-16T08:05:01.075Z",
+      "updatedAt": "2026-09-16T08:06:33.737Z",
+      "summary": {
+        "department": "Cardiology & Vascular Medicine",
+        "departmentId": "cardiology",
+        "chiefComplaint": "Shortness of Breath (Dyspnea)",
+        "clinicalNarrative": "Patient completed Cardiology & Vascular Medicine pre-consultation intake. Reported symptoms have been cataloged for clinician review prior to examination.",
+        "structuredFields": {
+          "Chief Complaint": "Shortness of Breath (Dyspnea)",
+          "Chest Pain Character": "Not sure / skipped",
+          "Radiation": "Spreads to Left Arm or Shoulder",
+          "Exertion Relation": "Occurs at complete rest"
+        },
+        "redFlags": [],
+        "suggestedTriageLevel": "Routine",
+        "patientLanguage": "en",
+        "disclaimer": "AI PRE-CONSULTATION INTAKE: Generated automatically from patient self-reported dialogue. Not a medical diagnosis. For physician review, examination, and verification only."
+      },
+      "verifiedBy": "Dr. Rajesh Bennett, MD",
+      "verifiedAt": "2026-09-16T08:06:33.737Z"
+    },
+    {
+      "id": "intake-1789547111719-8ef339",
+      "userId": "9dcd8b72-525e-43ab-9472-20082280bbc1",
+      "patientName": "VASANDHAN P.K.G 2028",
+      "departmentId": "dental",
+      "departmentName": "Dental & Oral Maxillofacial",
+      "language": "ta",
+      "status": "in_progress",
+      "currentSlotIndex": 1,
+      "totalSlots": 8,
+      "messages": [
+        {
+          "role": "assistant",
+          "text": "இன்று நீங்கள் சந்திக்கும் முதன்மையான பல் பிரச்சனை என்ன?",
+          "slotKey": "chiefComplaint",
+          "timestamp": "2026-09-16T08:25:11.719Z"
+        }
+      ],
+      "collectedData": {},
+      "redFlags": [],
+      "isVerified": false,
+      "createdAt": "2026-09-16T08:25:11.719Z",
+      "updatedAt": "2026-09-16T08:25:11.719Z"
     }
   ]
 }

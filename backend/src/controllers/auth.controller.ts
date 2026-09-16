@@ -12,6 +12,18 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
 
+    if (dob) {
+      const dobDate = new Date(dob);
+      const now = new Date();
+      if (isNaN(dobDate.getTime())) {
+        return res.status(400).json({ error: 'Invalid Date of Birth format.' });
+      }
+      // Compare dates (setting time to end of current day for timezone margin)
+      if (dobDate > now) {
+        return res.status(400).json({ error: 'Date of birth cannot be in the future. Please select a valid date.' });
+      }
+    }
+
     const existingUser = await db.findUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email already exists' });

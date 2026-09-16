@@ -106,6 +106,50 @@ export interface EmergencyAccess {
   createdAt?: string;
 }
 
+export interface ClinicalInterviewMessage {
+  role: 'system' | 'assistant' | 'user';
+  text: string;
+  slotKey?: string;
+  inputMode?: 'voice' | 'text' | 'touch';
+  timestamp: string;
+}
+
+export interface PreConsultationSummary {
+  department: string;
+  departmentId: string;
+  chiefComplaint: string;
+  clinicalNarrative: string;
+  structuredFields: Record<string, string>;
+  redFlags: string[];
+  suggestedTriageLevel: 'Routine' | 'Priority' | 'Immediate Clinical Attention';
+  patientLanguage: string;
+  doctorNotes?: string;
+  disclaimer: string;
+}
+
+export interface ClinicalInterviewSession {
+  id: string;
+  userId: string;
+  patientName?: string;
+  departmentId: string;
+  departmentName: string;
+  language: string;
+  status: 'in_progress' | 'completed' | 'verified';
+  currentSlotIndex: number;
+  totalSlots: number;
+  messages: ClinicalInterviewMessage[];
+  collectedData: Record<string, any>;
+  summary?: PreConsultationSummary;
+  redFlags: string[];
+  isVerified: boolean;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  doctorNotes?: string;
+  recordId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const DATA_FILE = path.join(__dirname, '../../data/db.json');
 
 interface DbSchema {
@@ -115,9 +159,11 @@ interface DbSchema {
   conditions: HealthCondition[];
   vaccinations: VaccinationRecord[];
   emergencyTokens: EmergencyAccess[];
+  interviews?: ClinicalInterviewSession[];
 }
 
 const initialDb: DbSchema = {
+  interviews: [],
   users: [
     {
       id: "usr-1",
@@ -368,6 +414,7 @@ class DatabaseService {
         // Ensure new arrays exist
         parsed.conditions = parsed.conditions || initialDb.conditions;
         parsed.vaccinations = parsed.vaccinations || initialDb.vaccinations;
+        parsed.interviews = parsed.interviews || [];
         return parsed;
       }
       this.saveLocalData(initialDb);
@@ -1020,6 +1067,173 @@ class DatabaseService {
     if (!found) return null;
     if (new Date(found.expiresAt) < new Date()) return null;
     return found;
+  }
+
+  // ==========================================
+  // Clinical Intake Interviews
+  // ==========================================
+
+  public async createInterviewSession(session: ClinicalInterviewSession): Promise<ClinicalInterviewSession> {
+    if (supabase) {
+      try {
+        await supabase.from('clinical_interviews').insert({
+          id: session.id,
+          user_id: session.userId,
+          department_id: session.departmentId,
+          department_name: session.departmentName,
+          language: session.language,
+          status: session.status,
+          conversation: session.messages,
+          structured_data: session.collectedData,
+          summary: session.summary || null,
+          red_flags: session.redFlags || [],
+          doctor_notes: session.doctorNotes || null,
+          verified_by: session.verifiedBy || null,
+          verified_at: session.verifiedAt || null,
+          created_at: session.createdAt,
+          updated_at: session.updatedAt
+        });
+      } catch (err) {
+        console.warn('Supabase createInterviewSession fallback to local DB:', err);
+      }
+    }
+
+    if (!this.localDb.interviews) this.localDb.interviews = [];
+    this.localDb.interviews.push(session);
+    this.saveLocalData(this.localDb);
+    return session;
+  }
+
+  public async getInterviewSession(id: string): Promise<ClinicalInterviewSession | null> {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('clinical_interviews')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (!error && data) {
+          return {
+            id: data.id,
+            userId: data.user_id,
+            departmentId: data.department_id,
+            departmentName: data.department_name,
+            language: data.language,
+            status: data.status,
+            currentSlotIndex: data.conversation?.length || 0,
+            totalSlots: 8,
+            messages: data.conversation || [],
+            collectedData: data.structured_data || {},
+            summary: data.summary || undefined,
+            redFlags: data.red_flags || [],
+            isVerified: data.status === 'verified',
+            verifiedBy: data.verified_by,
+            verifiedAt: data.verified_at,
+            doctorNotes: data.doctor_notes,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at
+          };
+        }
+      } catch (err) {
+        console.warn('Supabase getInterviewSession fallback to local DB:', err);
+      }
+    }
+
+    if (!this.localDb.interviews) this.localDb.interviews = [];
+    const found = this.localDb.interviews.find(s => s.id === id);
+    return found || null;
+  }
+
+  public async updateInterviewSession(id: string, updates: Partial<ClinicalInterviewSession>): Promise<ClinicalInterviewSession | null> {
+    if (!this.localDb.interviews) this.localDb.interviews = [];
+    const idx = this.localDb.interviews.findIndex(s => s.id === id);
+    if (idx === -1) return null;
+
+    const updated = {
+      ...this.localDb.interviews[idx],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+    this.localDb.interviews[idx] = updated;
+    this.saveLocalData(this.localDb);
+
+    if (supabase) {
+      try {
+        await supabase.from('clinical_interviews').update({
+          status: updated.status,
+          conversation: updated.messages,
+          structured_data: updated.collectedData,
+          summary: updated.summary || null,
+          red_flags: updated.redFlags || [],
+          doctor_notes: updated.doctorNotes || null,
+          verified_by: updated.verifiedBy || null,
+          verified_at: updated.verifiedAt || null,
+          updated_at: updated.updatedAt
+        }).eq('id', id);
+      } catch (err) {
+        console.warn('Supabase updateInterviewSession fallback:', err);
+      }
+    }
+
+    return updated;
+  }
+
+  public async getPatientInterviews(userId: string): Promise<ClinicalInterviewSession[]> {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('clinical_interviews')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          return data.map(d => ({
+            id: d.id,
+            userId: d.user_id,
+            departmentId: d.department_id,
+            departmentName: d.department_name,
+            language: d.language,
+            status: d.status,
+            currentSlotIndex: d.conversation?.length || 0,
+            totalSlots: 8,
+            messages: d.conversation || [],
+            collectedData: d.structured_data || {},
+            summary: d.summary || undefined,
+            redFlags: d.red_flags || [],
+            isVerified: d.status === 'verified',
+            verifiedBy: d.verified_by,
+            verifiedAt: d.verified_at,
+            doctorNotes: d.doctor_notes,
+            createdAt: d.created_at,
+            updatedAt: d.updated_at
+          }));
+        }
+      } catch (err) {
+        console.warn('Supabase getPatientInterviews fallback:', err);
+      }
+    }
+
+    if (!this.localDb.interviews) this.localDb.interviews = [];
+    return this.localDb.interviews.filter(s => s.userId === userId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  public async updateInterviewSummary(id: string, summary: PreConsultationSummary, doctorNotes?: string): Promise<ClinicalInterviewSession | null> {
+    return this.updateInterviewSession(id, {
+      summary,
+      doctorNotes: doctorNotes !== undefined ? doctorNotes : undefined
+    });
+  }
+
+  public async verifyInterviewSession(id: string, doctorName: string, doctorNotes?: string): Promise<ClinicalInterviewSession | null> {
+    return this.updateInterviewSession(id, {
+      status: 'verified',
+      isVerified: true,
+      verifiedBy: doctorName,
+      verifiedAt: new Date().toISOString(),
+      ...(doctorNotes ? { doctorNotes } : {})
+    });
   }
 }
 

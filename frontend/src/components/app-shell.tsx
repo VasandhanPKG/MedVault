@@ -13,6 +13,7 @@ import {
   QrCode,
   Settings,
   ShieldPlus,
+  Stethoscope,
   Syringe,
   Upload,
   User,
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/intake", label: "AI Clinical Intake", icon: Stethoscope },
   { to: "/timeline", label: "Health Journey", icon: FileHeart },
   { to: "/records", label: "Medical Records", icon: FileText },
   { to: "/vaccinations", label: "Vaccine Passport", icon: Syringe },
@@ -102,14 +104,16 @@ export function AppShell({
     : "PT";
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      {/* Desktop Sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r border-border bg-card/60 p-4 lg:flex lg:flex-col lg:justify-between">
-        <div className="space-y-6">
-          <Brand className="px-2 pt-2" />
-          <NavList />
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+      {/* Desktop Sidebar - Fixed viewport height, never scrolled off-screen */}
+      <aside className="hidden w-64 shrink-0 border-r border-border bg-card/60 p-4 lg:flex lg:flex-col lg:justify-between h-screen overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <Brand className="px-2 pt-2 pb-4 shrink-0" />
+          <div className="flex-1 overflow-y-auto pr-1">
+            <NavList />
+          </div>
         </div>
-        <div className="border-t border-border pt-4">
+        <div className="shrink-0 border-t border-border pt-3 mt-2">
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-3 overflow-hidden">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
@@ -123,7 +127,7 @@ export function AppShell({
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 text-muted-foreground hover:text-foreground"
+              className="size-8 text-muted-foreground hover:text-foreground hover:bg-destructive/10 hover:text-destructive"
               onClick={() => api.logout()}
               title="Log out"
             >
@@ -133,10 +137,10 @@ export function AppShell({
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      {/* Main Content Area - Header pinned, main scrollable */}
+      <div className="flex flex-1 flex-col h-screen overflow-hidden">
         {/* Top Header Navbar */}
-        <header className="flex h-16 items-center justify-between border-b border-border bg-card/40 px-4 sm:px-6 backdrop-blur-md">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card/40 px-4 sm:px-6 backdrop-blur-md">
           <div className="flex items-center gap-3">
             {/* Mobile Navigation Drawer Trigger */}
             <Sheet>
@@ -146,9 +150,35 @@ export function AppShell({
                   <span className="sr-only">Toggle navigation</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-4">
-                <Brand className="px-2 pb-6 pt-2" />
-                <NavList />
+              <SheetContent side="left" className="w-72 p-4 flex flex-col justify-between h-full">
+                <div className="flex flex-col flex-1 overflow-hidden min-h-0">
+                  <Brand className="px-2 pb-6 pt-2 shrink-0" />
+                  <div className="flex-1 overflow-y-auto pr-1">
+                    <NavList />
+                  </div>
+                </div>
+                <div className="shrink-0 border-t border-border pt-3">
+                  <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
+                        {initials}
+                      </span>
+                      <div className="truncate">
+                        <p className="truncate text-xs font-semibold">{user.name}</p>
+                        <p className="truncate text-[11px] text-muted-foreground">{user.email || user.bloodGroup || "Patient Vault"}</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => api.logout()}
+                      title="Log out"
+                    >
+                      <LogOut className="size-4" />
+                    </Button>
+                  </div>
+                </div>
               </SheetContent>
             </Sheet>
 

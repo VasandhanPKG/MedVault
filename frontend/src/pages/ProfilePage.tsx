@@ -67,7 +67,13 @@ export function ProfilePage() {
       .catch(() => {});
   }, []);
 
+  const todayDate = new Date().toISOString().split("T")[0];
+
   const handleSave = async () => {
+    if (profile.dob && profile.dob > todayDate) {
+      toast.error("Date of birth cannot be in the future. Please select a valid date.");
+      return;
+    }
     setSaving(true);
     try {
       const res = await api.updateProfile(profile);
@@ -137,6 +143,7 @@ export function ProfilePage() {
               <Input
                 id="p-dob"
                 type="date"
+                max={todayDate}
                 value={profile.dob || ""}
                 onChange={(e) => setProfile({ ...profile, dob: e.target.value })}
               />

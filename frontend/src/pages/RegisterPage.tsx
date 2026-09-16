@@ -31,8 +31,21 @@ export function RegisterPage() {
     password: "",
   });
 
+  const todayDate = new Date().toISOString().split("T")[0];
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.dob) {
+      toast.error("Please enter your Date of Birth.");
+      return;
+    }
+
+    if (formData.dob > todayDate) {
+      toast.error("Date of birth cannot be in the future. Please select a valid date.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -145,6 +158,7 @@ export function RegisterPage() {
               id="dob"
               type="date"
               required
+              max={todayDate}
               value={formData.dob}
               onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
             />
