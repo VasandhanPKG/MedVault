@@ -18,13 +18,16 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // CORS setup
-const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173,http://localhost:3000').split(',');
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173,http://localhost:3000,http://localhost:8080')
+  .split(',')
+  .map(s => s.trim());
+
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
-      callback(null, true); // Permissive CORS for dev
+      callback(null, true); // Permissive CORS for deployed frontends
     }
   },
   credentials: true
