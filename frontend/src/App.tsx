@@ -3,8 +3,10 @@ import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "./components/theme-provider";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { supabase } from "./lib/supabase";
-import { setAuthToken, setStoredUser } from "./lib/api-client";
+import { setAuthToken, setStoredUser, isProfileComplete, getStoredUser } from "./lib/api-client";
 
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -48,6 +50,7 @@ function AuthSessionListener() {
         if (accessToken) {
           setAuthToken(accessToken);
 
+          let user: any = null;
           // Decode JWT payload to extract user info immediately
           try {
             const base64Url = accessToken.split(".")[1];
@@ -60,7 +63,7 @@ function AuthSessionListener() {
                   .join("")
               );
               const payload = JSON.parse(jsonPayload);
-              const user = {
+              user = {
                 id: payload.sub || payload.id,
                 email: payload.email,
                 name:
@@ -68,6 +71,11 @@ function AuthSessionListener() {
                   payload.user_metadata?.name ||
                   payload.email?.split("@")[0] ||
                   "Google Patient",
+                dob: payload.user_metadata?.dob || "",
+                gender: payload.user_metadata?.gender || "Unspecified",
+                bloodGroup: payload.user_metadata?.blood_group || "O+",
+                phone: payload.user_metadata?.phone || "",
+                isProfileComplete: false
               };
               setStoredUser(user);
             }
@@ -87,7 +95,11 @@ function AuthSessionListener() {
 
           // Clean URL hash so access tokens are not exposed in browser address bar
           window.history.replaceState(null, "", window.location.pathname || "/dashboard");
-          navigate("/dashboard");
+          if (isProfileComplete(user)) {
+            navigate("/dashboard");
+          } else {
+            navigate("/profile", { state: { requiredSetup: true } });
+          }
           return;
         }
       } catch (err) {
@@ -101,6 +113,7 @@ function AuthSessionListener() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setAuthToken(session.access_token);
+        const currentUser = getStoredUser();
         const user = {
           id: session.user.id,
           email: session.user.email,
@@ -109,6 +122,7 @@ function AuthSessionListener() {
             session.user.user_metadata?.name ||
             session.user.email?.split("@")[0] ||
             "Patient",
+          ...currentUser
         };
         setStoredUser(user);
       }
@@ -120,6 +134,7 @@ function AuthSessionListener() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
         setAuthToken(session.access_token);
+        const currentUser = getStoredUser();
         const user = {
           id: session.user.id,
           email: session.user.email,
@@ -128,6 +143,7 @@ function AuthSessionListener() {
             session.user.user_metadata?.name ||
             session.user.email?.split("@")[0] ||
             "Patient",
+          ...currentUser
         };
         setStoredUser(user);
         if (
@@ -135,7 +151,11 @@ function AuthSessionListener() {
           window.location.pathname === "/register" ||
           window.location.pathname === "/"
         ) {
-          navigate("/dashboard");
+          if (isProfileComplete(user)) {
+            navigate("/dashboard");
+          } else {
+            navigate("/profile", { state: { requiredSetup: true } });
+          }
         }
       }
     });
@@ -151,34 +171,133 @@ function AuthSessionListener() {
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <BrowserRouter>
-          <AuthSessionListener />
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/timeline" element={<TimelinePage />} />
-            <Route path="/records" element={<RecordsPage />} />
-            <Route path="/vaccinations" element={<VaccinationsPage />} />
-            <Route path="/upload" element={<UploadPage />} />
-            <Route path="/assistant" element={<AssistantPage />} />
-            <Route path="/intake" element={<IntakePage />} />
-            <Route path="/intake/:sessionId" element={<IntakePage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/risk" element={<RiskPage />} />
-            <Route path="/emergency" element={<EmergencyPage />} />
-            {/* Scoped Recipient & Triage Viewer Route */}
-            <Route path="/e/:token" element={<EmergencyResponderPage />} />
-            <Route path="/emergency/verify" element={<EmergencyResponderPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-          <Toaster />
-        </BrowserRouter>
-      </TooltipProvider>
+      <ThemeProvider defaultTheme="system" storageKey="medvault_theme">
+        <TooltipProvider>
+          <BrowserRouter>
+            <AuthSessionListener />
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/e/:token" element={<EmergencyResponderPage />} />
+              <Route path="/emergency/verify" element={<EmergencyResponderPage />} />
+              <Route path="/emergency/verify/:token" element={<EmergencyResponderPage />} />
+
+              {/* Profile Route - accessible to complete onboarding */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute allowIncompleteProfile={true}>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Protected App Routes - locked until profile is complete */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/timeline"
+                element={
+                  <ProtectedRoute>
+                    <TimelinePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/records"
+                element={
+                  <ProtectedRoute>
+                    <RecordsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/vaccinations"
+                element={
+                  <ProtectedRoute>
+                    <VaccinationsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/upload"
+                element={
+                  <ProtectedRoute>
+                    <UploadPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/assistant"
+                element={
+                  <ProtectedRoute>
+                    <AssistantPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/intake"
+                element={
+                  <ProtectedRoute>
+                    <IntakePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/intake/:sessionId"
+                element={
+                  <ProtectedRoute>
+                    <IntakePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute>
+                    <AnalyticsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/risk"
+                element={
+                  <ProtectedRoute>
+                    <RiskPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/emergency"
+                element={
+                  <ProtectedRoute>
+                    <EmergencyPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+            <Toaster />
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

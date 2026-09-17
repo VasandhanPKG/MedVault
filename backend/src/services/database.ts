@@ -19,6 +19,7 @@ export interface PatientProfile {
     relation: string;
     phone: string;
   };
+  isProfileComplete?: boolean;
 }
 
 export interface UserAccount extends PatientProfile {
@@ -182,6 +183,7 @@ const initialDb: DbSchema = {
         relation: "Spouse",
         phone: "+91 98111 20034"
       },
+      isProfileComplete: true,
       passwordHash: "$2a$10$X8p5Kz8T940/2L2p7xG9e.40j9h9K3z10sP.wQ.eX2z.G5kL"
     }
   ],
@@ -497,6 +499,7 @@ class DatabaseService {
             allergies: Array.isArray(data.allergies) ? data.allergies : [],
             conditions: Array.isArray(data.conditions) ? data.conditions : [],
             emergencyContact: typeof data.emergency_contact === 'object' ? data.emergency_contact : { name: '', relation: '', phone: '' },
+            isProfileComplete: data.is_profile_complete ?? true,
             passwordHash: data.password_hash
           };
         }
@@ -541,8 +544,27 @@ class DatabaseService {
   }
 
   public async updateUser(id: string, updates: Partial<PatientProfile>): Promise<UserAccount | null> {
-    const userIndex = this.localDb.users.findIndex(u => u.id === id);
-    if (userIndex === -1) return null;
+    let userIndex = this.localDb.users.findIndex(u => u.id === id);
+    if (userIndex === -1) {
+      const newUser: UserAccount = {
+        id,
+        name: updates.name || 'Patient',
+        dob: updates.dob || '',
+        gender: updates.gender || 'Unspecified',
+        bloodGroup: updates.bloodGroup || 'O+',
+        email: updates.email || '',
+        phone: updates.phone || '',
+        height: updates.height || '175 cm',
+        weight: updates.weight || '70 kg',
+        allergies: updates.allergies || [],
+        conditions: updates.conditions || [],
+        emergencyContact: updates.emergencyContact || { name: '', relation: '', phone: '' },
+        passwordHash: '',
+        isProfileComplete: updates.isProfileComplete ?? false
+      };
+      this.localDb.users.push(newUser);
+      userIndex = this.localDb.users.length - 1;
+    }
 
     this.localDb.users[userIndex] = {
       ...this.localDb.users[userIndex],

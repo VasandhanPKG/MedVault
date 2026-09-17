@@ -17,8 +17,8 @@ const router = Router();
 router.post('/assistant', authenticateToken, askAssistant);
 router.get('/risk-analysis', authenticateToken, getRiskAnalysis);
 
-// Department-Specific Adaptive AI Intake
-router.get('/intake/departments', authenticateToken, getDepartments);
+// Department-Specific Adaptive AI Intake (department metadata ontology is public reference data)
+router.get('/intake/departments', getDepartments);
 router.post('/intake/session/start', authenticateToken, startInterviewSession);
 router.post('/intake/session/:sessionId/answer', authenticateToken, submitInterviewAnswer);
 router.get('/intake/session/:sessionId/summary', authenticateToken, getInterviewSummary);

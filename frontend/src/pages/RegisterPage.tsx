@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Brand } from "@/components/app-shell";
 import { AuthLayout } from "@/components/auth-layout";
-import { api, setAuthToken, setStoredUser } from "@/lib/api-client";
+import { api, setAuthToken, setStoredUser, isProfileComplete } from "@/lib/api-client";
 
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -53,8 +53,8 @@ export function RegisterPage() {
       if (res.token) {
         setAuthToken(res.token);
       }
-      toast.success("Health vault created successfully!");
-      navigate("/dashboard");
+      toast.success("Health vault created! Please complete your medical profile to activate.");
+      navigate("/profile", { state: { requiredSetup: true } });
     } catch (err: any) {
       console.error("Registration error:", err);
       toast.error(err.message || "Failed to create account. Please check your details.");
@@ -73,15 +73,19 @@ export function RegisterPage() {
         id: `google-usr-${Math.random().toString(36).substring(2, 9)}`,
         email: "google.patient@gmail.com",
         name: "Google Verified Patient",
+        dob: "",
+        gender: "Unspecified",
         bloodGroup: "O+",
+        phone: "",
         allergies: [],
         conditions: [],
-        emergencyContact: { name: "Family Contact", phone: "+1 555-0199" }
+        emergencyContact: { name: "", relation: "", phone: "" },
+        isProfileComplete: false
       };
       setAuthToken(`google-token-${Date.now()}`);
       setStoredUser(googleUser);
-      toast.success("Signed up with Google!");
-      navigate("/dashboard");
+      toast.info("Signed up with Google! Please complete your medical profile to activate.");
+      navigate("/profile", { state: { requiredSetup: true } });
     } finally {
       setGoogleLoading(false);
     }

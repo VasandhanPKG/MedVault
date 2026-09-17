@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Brand } from "@/components/app-shell";
 import { AuthLayout } from "@/components/auth-layout";
-import { api, setAuthToken, setStoredUser } from "@/lib/api-client";
+import { api, setAuthToken, setStoredUser, isProfileComplete } from "@/lib/api-client";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -24,8 +24,14 @@ export function LoginPage() {
       if (res.token) {
         setAuthToken(res.token);
       }
-      toast.success("Welcome back to your MedVault!");
-      navigate("/dashboard");
+      const user = res.user;
+      if (isProfileComplete(user)) {
+        toast.success("Welcome back to your MedVault!");
+        navigate("/dashboard");
+      } else {
+        toast.info("Please finish setting up your profile details.");
+        navigate("/profile", { state: { requiredSetup: true } });
+      }
     } catch (err: any) {
       console.error("Login error:", err);
       toast.error(err.message || "Invalid credentials. Please try again.");
@@ -45,15 +51,19 @@ export function LoginPage() {
         id: `google-usr-${Math.random().toString(36).substring(2, 9)}`,
         email: "google.patient@gmail.com",
         name: "Google Verified Patient",
+        dob: "",
+        gender: "Unspecified",
         bloodGroup: "O+",
+        phone: "",
         allergies: [],
         conditions: [],
-        emergencyContact: { name: "Family Contact", phone: "+1 555-0199" }
+        emergencyContact: { name: "", relation: "", phone: "" },
+        isProfileComplete: false
       };
       setAuthToken(`google-token-${Date.now()}`);
       setStoredUser(googleUser);
-      toast.success("Signed in with Google!");
-      navigate("/dashboard");
+      toast.info("Signed in with Google! Please complete your medical profile.");
+      navigate("/profile", { state: { requiredSetup: true } });
     } finally {
       setGoogleLoading(false);
     }

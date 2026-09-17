@@ -40,7 +40,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { api, getStoredUser } from "@/lib/api-client";
+import { api, getStoredUser, setStoredUser } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
 
@@ -180,58 +180,12 @@ export function EmergencyPage() {
     generate("emergency", 24);
   }, []);
 
-  const handleCopy = () => {
-    if (!url) return;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    toast.success("Universal link copied to clipboard!");
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleDownloadQr = () => {
-    const svg = qrRef.current?.querySelector("svg");
-    if (!svg) return;
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    img.onload = () => {
-      canvas.width = 1000;
-      canvas.height = 1000;
-      if (ctx) {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, 1000, 1000);
-        ctx.drawImage(img, 100, 100, 800, 800);
-        const pngFile = canvas.toDataURL("image/png");
-        const downloadLink = document.createElement("a");
-        downloadLink.download = `MedVault_${activeTab.toUpperCase()}_QR_${token || "pass"}.png`;
-        downloadLink.href = pngFile;
-        downloadLink.click();
-        toast.success("High-Resolution QR Pass downloaded!");
-      }
-    };
-    img.src = "data:image/svg+xml;base64," + btoa(svgData);
-  };
-
-  const handleRevoke = async (tok: string) => {
-    try {
-      await api.revokeToken(tok);
-      setActiveTokens((prev) => prev.filter((t) => t.token !== tok));
-      if (token === tok) setToken(null);
-      toast.success(`Access token ${tok} revoked!`);
-    } catch {
-      setActiveTokens((prev) => prev.filter((t) => t.token !== tok));
-      if (token === tok) setToken(null);
-      toast.success(`Access token ${tok} revoked!`);
-    }
-  };
-
   const currentTab = qrTabs.find((t) => t.id === activeTab) || qrTabs[0];
   const TabIcon = currentTab.icon;
 
   // Build resilient QR URL with embedded patient profile data for offline scanning
-  let url = "";
-  if (token) {
+  const url = (() => {
+    if (!token) return "";
     try {
       const compactPayload = {
         tok: token,
@@ -246,11 +200,69 @@ export function EmergencyPage() {
         exp: new Date(Date.now() + durationHours * 3600 * 1000).toISOString(),
       };
       const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(compactPayload))));
-      url = `${window.location.origin}/e/${token}?d=${encodedData}`;
+      return `${window.location.origin}/e/${token}?d=${encodedData}`;
     } catch {
-      url = `${window.location.origin}/e/${token}`;
+      return `${window.location.origin}/e/${token}`;
     }
-  }
+  })();
+
+  const handleCopy = () => {
+    if (!url) return;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    toast.success("Universal link copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadQr = () => {
+    const svg = qrRef.current?.querySelector("svg");
+    if (!svg) {
+      toast.error("QR code not ready yet.");
+      return;
+    }
+    try {
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = 1000;
+        canvas.height = 1000;
+        if (ctx) {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, 1000, 1000);
+          ctx.drawImage(img, 100, 100, 800, 800);
+          const pngFile = canvas.toDataURL("image/png");
+          const downloadLink = document.createElement("a");
+          downloadLink.download = `MedVault_${activeTab.toUpperCase()}_QR_${token || "pass"}.png`;
+          downloadLink.href = pngFile;
+          downloadLink.click();
+          toast.success("High-Resolution QR Pass downloaded!");
+        }
+      };
+      img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+    } catch (err) {
+      console.error("QR download error:", err);
+      toast.error("Could not download QR code image.");
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleRevoke = async (tok: string) => {
+    try {
+      await api.revokeToken(tok);
+      setActiveTokens((prev) => prev.filter((t) => t.token !== tok));
+      if (token === tok) setToken(null);
+      toast.success(`Access token ${tok} revoked!`);
+    } catch {
+      setActiveTokens((prev) => prev.filter((t) => t.token !== tok));
+      if (token === tok) setToken(null);
+      toast.success(`Access token ${tok} revoked!`);
+    }
+  };
 
   return (
     <AppShell
@@ -406,6 +418,15 @@ export function EmergencyPage() {
                   className="text-xs h-9 rounded-xl gap-1.5 border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 font-bold"
                 >
                   <Eye className="size-3.5" /> Live Preview
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrint}
+                  className="text-xs h-9 rounded-xl gap-1.5"
+                >
+                  <Printer className="size-3.5" /> Print Card
                 </Button>
 
                 <Button

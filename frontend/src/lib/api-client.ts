@@ -62,6 +62,24 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   return response.json();
 };
 
+export const isProfileComplete = (user: any): boolean => {
+  if (!user) return false;
+  if (user.isProfileComplete === true) return true;
+  const hasName = Boolean(user.name && user.name.trim().length > 0 && user.name !== "Patient");
+  const hasDob = Boolean(user.dob && user.dob.trim().length > 0);
+  const hasGender = Boolean(user.gender && user.gender !== "Unspecified");
+  const hasBloodGroup = Boolean(user.bloodGroup && user.bloodGroup !== "Not set" && user.bloodGroup.trim().length > 0);
+  const hasPhone = Boolean(user.phone && user.phone.trim().length > 5 && !user.phone.includes("00000 00000"));
+  const hasEmergency = Boolean(
+    user.emergencyContact &&
+    user.emergencyContact.name &&
+    user.emergencyContact.phone &&
+    !user.emergencyContact.phone.includes("00000 00000")
+  );
+
+  return Boolean(hasName && hasDob && hasGender && hasBloodGroup && hasPhone && hasEmergency);
+};
+
 export const api = {
   login: async (credentialsOrEmail: any, maybePassword?: string) => {
     const credentials =
@@ -150,7 +168,13 @@ export const api = {
   },
 
   getProfile: () => apiFetch('/auth/me'),
-  updateProfile: (data: any) => apiFetch('/auth/profile', { method: 'PUT', body: JSON.stringify(data) }),
+  updateProfile: async (data: any) => {
+    try {
+      return await apiFetch('/patient/profile', { method: 'PUT', body: JSON.stringify(data) });
+    } catch {
+      return await apiFetch('/auth/profile', { method: 'PUT', body: JSON.stringify(data) });
+    }
+  },
 
   getRecords: () => apiFetch('/records'),
   getRecordById: (id: string) => apiFetch(`/records/${id}`),

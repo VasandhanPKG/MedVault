@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Bell, KeyRound, Monitor, Moon, Palette, Sun } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
 const themes = [
@@ -22,18 +23,11 @@ const notifications = [
 ];
 
 export function SettingsPage() {
-  const [theme, setTheme] = useState<(typeof themes)[number]["id"]>("light");
+  const { theme, setTheme } = useTheme();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updating, setUpdating] = useState(false);
-
-  useEffect(() => {
-    const dark =
-      theme === "dark" ||
-      (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.classList.toggle("dark", dark);
-  }, [theme]);
 
   const handlePasswordUpdate = (e: React.FormEvent) => {
     e.preventDefault();

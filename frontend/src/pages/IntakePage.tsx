@@ -18,6 +18,7 @@ import { DepartmentSelector } from "@/components/intake/department-selector";
 import { AdaptiveQuestionCard } from "@/components/intake/adaptive-question-card";
 import { DoctorIntakeViewer } from "@/components/intake/doctor-intake-viewer";
 import { api } from "@/lib/api-client";
+import { DEFAULT_DEPARTMENTS } from "@/lib/default-departments";
 import { toast } from "sonner";
 
 export function IntakePage() {
@@ -25,7 +26,7 @@ export function IntakePage() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<"intake" | "history">("intake");
-  const [departments, setDepartments] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>(DEFAULT_DEPARTMENTS);
   const [selectedDeptId, setSelectedDeptId] = useState<string | null>("dental");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
 
@@ -42,11 +43,11 @@ export function IntakePage() {
   useEffect(() => {
     api.getIntakeDepartments()
       .then((res) => {
-        if (res.departments) {
+        if (res && res.departments && res.departments.length > 0) {
           setDepartments(res.departments);
         }
       })
-      .catch((err) => console.error("Failed to load departments:", err));
+      .catch((err) => console.warn("Using offline default departments:", err));
 
     loadHistory();
   }, []);
