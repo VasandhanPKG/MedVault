@@ -208,7 +208,9 @@ export const api = {
   sendChatMessage: (data: { message: string; conversationId?: string; language?: string; mode?: string }) =>
     apiFetch('/chat/message', { method: 'POST', body: JSON.stringify(data) }),
   askAssistant: (dataOrMessage: any) => {
-    const payload = typeof dataOrMessage === 'string' ? { message: dataOrMessage } : dataOrMessage;
+    const payload = typeof dataOrMessage === 'string'
+      ? { question: dataOrMessage, message: dataOrMessage }
+      : { question: dataOrMessage.question || dataOrMessage.message, message: dataOrMessage.message || dataOrMessage.question, ...dataOrMessage };
     return apiFetch('/ai/assistant', { method: 'POST', body: JSON.stringify(payload) });
   },
   getChatHistory: () => apiFetch('/chat/history'),

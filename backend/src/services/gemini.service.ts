@@ -438,6 +438,76 @@ Return ONLY a JSON object matching this schema:
       disclaimer
     };
   }
+
+  /**
+   * Conversational Clinical AI Assistant for patient vault Q&A
+   */
+  public async answerAssistantQuestion(
+    question: string,
+    patientContext: {
+      name: string;
+      bloodGroup?: string;
+      allergies: string[];
+      conditions: string[];
+      records: any[];
+      vitals: any[];
+    }
+  ): Promise<{ answer: string; sources: string[] }> {
+    if (this.model) {
+      try {
+        const recordsSummary = (patientContext.records || []).slice(0, 10).map(r =>
+          `• ${r.name} (${r.category}, Date: ${r.date || 'Recent'}): ${r.summary || ''}`
+        ).join('\n');
+
+        const vitalsSummary = (patientContext.vitals || []).slice(-5).map(v =>
+          `• Date ${v.date}: Blood Pressure ${v.systolic}/${v.diastolic} mmHg, Heart Rate ${v.heartRate} bpm, Fasting Glucose ${v.bloodGlucose} mg/dL, Weight ${v.weightKg} kg`
+        ).join('\n');
+
+        const prompt = `
+You are MedVault's clinical AI co-pilot and health assistant. You communicate with empathy, clinical clarity, and patient-centered language.
+
+Patient Context:
+- Patient Name: ${patientContext.name}
+- Blood Group: ${patientContext.bloodGroup || 'Not specified'}
+- Documented Allergies: ${patientContext.allergies.length > 0 ? patientContext.allergies.join(', ') : 'None documented'}
+- Documented Conditions: ${patientContext.conditions.length > 0 ? patientContext.conditions.join(', ') : 'None documented'}
+
+Patient Vitals History:
+${vitalsSummary || 'No vitals logged yet'}
+
+Patient Medical Vault Documents:
+${recordsSummary || 'No documents in vault yet'}
+
+User's Question:
+"${question}"
+
+Instructions:
+1. Provide a direct, reassuring, and scientifically accurate answer addressing the patient's exact question.
+2. Ground your response in the patient's personal documents, vitals, or allergies when relevant.
+3. If they ask about medical terms, lab results, medications, or health symptoms, explain them clearly in simple terms.
+4. Keep the response formatted with clear bullet points and bold headers for readability.
+5. End with a polite reminder that this is educational AI assistance and not a definitive clinical diagnosis.
+`;
+
+        const result = await this.model.generateContent(prompt);
+        const text = result.response.text();
+        if (text && text.trim().length > 0) {
+          const sources = (patientContext.records || []).slice(0, 3).map(r => r.name);
+          return {
+            answer: text.trim(),
+            sources: sources.length > 0 ? sources : ["MedVault Clinical Knowledgebase"]
+          };
+        }
+      } catch (err) {
+        console.warn('Gemini Assistant live query fallback:', err);
+      }
+    }
+
+    return {
+      answer: "",
+      sources: []
+    };
+  }
 }
 
 export const geminiService = new GeminiMedicalService();

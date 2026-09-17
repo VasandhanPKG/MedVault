@@ -5,16 +5,40 @@ import { geminiService } from '../services/gemini.service';
 
 export const askAssistant = async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user?.id || 'usr-1';
-  const { question } = req.body;
+  const question = req.body.question || req.body.message || req.body.prompt;
 
-  if (!question) {
-    return res.status(400).json({ error: 'Question is required' });
+  if (!question || typeof question !== 'string' || question.trim().length === 0) {
+    return res.status(400).json({ error: 'Question or message is required' });
   }
 
   const user = await db.findUserById(userId);
   const records = await db.getRecords(userId);
   const vitals = await db.getVitals(userId);
+  const conditions = await db.getConditions(userId);
   const lowerQ = question.toLowerCase();
+
+  // Try live Gemini generative model first
+  try {
+    const liveResult = await geminiService.answerAssistantQuestion(question.trim(), {
+      name: user?.name || 'Patient',
+      bloodGroup: user?.bloodGroup,
+      allergies: user?.allergies || [],
+      conditions: (conditions || []).map(c => c.title) || user?.conditions || [],
+      records: records || [],
+      vitals: vitals || []
+    });
+
+    if (liveResult && liveResult.answer && liveResult.answer.length > 0) {
+      return res.json({
+        question: question.trim(),
+        answer: liveResult.answer,
+        sources: liveResult.sources,
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (e) {
+    console.warn('Gemini Assistant live query fallback:', e);
+  }
 
   let answer = "";
   let matchedSources: string[] = [];
